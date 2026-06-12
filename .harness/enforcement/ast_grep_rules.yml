@@ -1,0 +1,67 @@
+# =========================================================
+# AEGIS HARNESS — AST-GREP ENFORCEMENT RULE
+# =========================================================
+
+# This file provides mechanically enforceable structural containment.
+#
+# It is NOT:
+# - constitutional governance;
+# - runtime orchestration;
+# - mode cognition;
+# - architectural truth.
+#
+# The goal is not stylistic purity.
+#
+# The goal is:
+# - preserving structural observability;
+# - preventing silent operational failure;
+# - constraining hidden execution opacity;
+# - preserving bounded mechanical reliability.
+
+id: no-empty-catch
+
+language: TypeScript
+
+severity: error
+
+message: >
+  Empty catch blocks hide operational failure surfaces.
+
+rule:
+  pattern: |
+    try {
+      $$$TRY
+    } catch ($ERR) {
+    }
+
+# =========================================================
+# EPISTEMIC NOTES
+# =========================================================
+
+# AST-Grep enforcement must remain:
+# - mechanically verifiable;
+# - structurally observable;
+# - minimally interpretive;
+# - low ambiguity.
+#
+# AST-Grep should enforce only:
+# - unequivocal structural violations;
+# - mechanically provable failure patterns.
+#
+# Architectural interpretation,
+# proportionality analysis,
+# redesign pressure,
+# adversarial reasoning,
+# and residual uncertainty
+# belong to:
+# - Mode 4;
+# - Mode 5;
+# - human review.
+#
+# AST-Grep is:
+# - structural physics.
+#
+# It is NOT:
+# - epistemological governance;
+# - semantic reasoning;
+# - architectural intelligence.
