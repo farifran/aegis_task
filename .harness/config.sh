@@ -70,9 +70,11 @@ export AEGIS_ARTIFACT_END_MARKER="AEGIS_ARTIFACT_END"
 
 : "${OPENAI_API_BASE:=https://integrate.api.nvidia.com/v1}"
 : "${OPENAI_MODEL_READONLY_COGNITION:=meta/llama-3.3-70b-instruct}"
+: "${AEGIS_MUTATION_MODEL:=${OPENAI_MODEL_READONLY_COGNITION}}"
 
 export OPENAI_API_BASE
 export OPENAI_MODEL_READONLY_COGNITION
+export AEGIS_MUTATION_MODEL
 
 # =========================================================
 # RAW SUBSTRATE POLICY

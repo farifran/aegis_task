@@ -94,6 +94,15 @@ Copy `observed_request_alignment` verbatim into the output.
 Do not modify `requested_paths`, `resolved_paths`, or `resolution_confidence`.
 If `observed_request_alignment` is absent from the builder payload, omit the field from output.
 
+### handover_attention
+
+Emit `handover_attention` populated from `observed_request_alignment.resolved_paths`.
+
+- If `resolved_paths` is non-empty: set `next_attention_targets` = `resolved_paths`, `attention_scope` = `"explicit_request"`, `attention_reason` = `"observed_request_alignment direct match"`.
+- If `resolved_paths` is empty or absent: set `next_attention_targets` = `[]`, `attention_scope` = `"topology"`, `attention_reason` = `"no explicit path resolved"`.
+
+This field is consumed by the runtime for epistemic handover. It is NOT copied into the artifact_snapshot — the runtime removes it before storage.
+
 ---
 
 ## OUTPUT
@@ -152,6 +161,12 @@ No explanations.
     "coverage_gap_count": 0,
     "relationship_gap_count": 0,
     "scope_gap_count": 0
+  },
+
+  "handover_attention": {
+    "next_attention_targets": ["src/index.ts"],
+    "attention_scope": "explicit_request",
+    "attention_reason": "observed_request_alignment direct match"
   }
 }
 ```

@@ -397,6 +397,34 @@ invoke_raw_substrate() {
       "${capability_payload_dir}"
 }
 
+invoke_aider_substrate() {
+
+  local skill_file="$1"
+  local capability_payload_dir="$2"
+
+  env -i \
+    PATH="${PATH}" \
+    HOME="${HOME:-}" \
+    TMPDIR="${TMPDIR:-/tmp}" \
+    LANG="${LANG:-C.UTF-8}" \
+    LC_ALL="${LC_ALL:-}" \
+    OPENAI_API_KEY="${OPENAI_API_KEY:-}" \
+    OPENAI_API_BASE="${OPENAI_API_BASE:-}" \
+    AEGIS_MODE="${AEGIS_MODE}" \
+    AEGIS_EXECUTION_ID="${AEGIS_EXECUTION_ID}" \
+    AEGIS_EXECUTION_TIMESTAMP="${AEGIS_EXECUTION_TIMESTAMP}" \
+    AEGIS_EXECUTION_SURFACE_PATH="${AEGIS_EXECUTION_SURFACE_PATH}" \
+    AEGIS_INVESTIGATION_INPUT="${AEGIS_INVESTIGATION_INPUT:-}" \
+    AEGIS_MUTATION_MODEL="${AEGIS_MUTATION_MODEL:-}" \
+    AEGIS_EPISTEMIC_HANDOVER_FILE="${AEGIS_EPISTEMIC_HANDOVER_FILE_INPUT:-}" \
+    AEGIS_ARTIFACT_BEGIN_MARKER="${AEGIS_ARTIFACT_BEGIN_MARKER}" \
+    AEGIS_ARTIFACT_END_MARKER="${AEGIS_ARTIFACT_END_MARKER}" \
+    bash scripts/substrates/aider_substrate.sh \
+      "${skill_file}" \
+      "${capability_payload_dir}"
+}
+
+
 # =========================================================
 # CAPABILITY ENVIRONMENT
 # =========================================================
@@ -628,7 +656,11 @@ execute_substrate() {
       ;;
 
     aider)
-      executor_fatal "mutation_substrate_not_implemented"
+      substrate_output="$(
+        invoke_aider_substrate \
+          "${AEGIS_SKILL_FILE}" \
+          "${AEGIS_CAPABILITY_PAYLOAD_DIR}"
+      )"
       ;;
 
     *)
@@ -675,6 +707,43 @@ validate_artifact() {
   executor_log "Payload validated successfully"
 }
 
+validate_mutation_artifact() {
+
+  local artifact
+
+  artifact="$(
+    echo "${AEGIS_SUBSTRATE_OUTPUT}" \
+      | sed -n '/AEGIS_ARTIFACT_BEGIN/,/AEGIS_ARTIFACT_END/p' \
+      | sed '1d;$d'
+  )"
+
+  [[ -n "${artifact}" ]] \
+    || executor_fatal "missing_mutation_artifact_payload"
+
+  echo "${artifact}" \
+    | jq empty \
+      >/dev/null 2>&1 \
+      || executor_fatal "invalid_mutation_artifact_json"
+
+  local artifact_mode
+  artifact_mode="$(
+    echo "${artifact}" | jq -r '.mode // empty'
+  )"
+
+  [[ "${artifact_mode}" == "${AEGIS_MODE}" ]] \
+    || executor_fatal "mutation_artifact_mode_mismatch"
+
+  echo "${artifact}" \
+    | jq -e 'has("diff")' >/dev/null 2>&1 \
+    || executor_fatal "mutation_artifact_missing_diff"
+
+  echo "${artifact}" \
+    | jq -e 'has("files_changed")' >/dev/null 2>&1 \
+    || executor_fatal "mutation_artifact_missing_files_changed"
+
+  executor_log "Mutation artifact validated successfully"
+}
+
 # =========================================================
 # OUTPUT
 # =========================================================
@@ -700,7 +769,12 @@ main() {
   select_evidence_payloads
   materialize_selected_manifest
   execute_substrate
-  validate_artifact
+
+  case "${AEGIS_EXECUTION_ENGINE}" in
+    aider) validate_mutation_artifact ;;
+    *)     validate_artifact           ;;
+  esac
+
   emit_output
 }
 
