@@ -1,0 +1,83 @@
+# =========================================================
+# AEGIS HARNESS — MUTATION SUBSTRATE PROFILE
+# =========================================================
+#
+# Version: 1.0
+# Layer: Mutation Substrate
+# Status: Operational
+#
+# This configuration is intended for:
+#
+# - automated mutation substrate execution
+# - runtime-governed bounded mutation
+# - non-interactive aider invocation inside git worktrees
+#
+# The runtime owns:
+#
+# - worktree lifecycle
+# - capability exposure
+# - mutation target selection
+# - artifact promotion
+#
+# This profile intentionally:
+#
+# - disables all interactive features
+# - disables git ownership (runtime owns the worktree)
+# - disables shell command suggestions
+# - disables notifications
+# - uses whole-file edit format for deterministic output
+#
+# =========================================================
+
+# ---------------------------------------------------------
+# NON-INTERACTIVE OPERATION
+# ---------------------------------------------------------
+
+yes-always: true
+
+stream: false
+
+pretty: false
+
+multiline: false
+
+fancy-input: false
+
+# ---------------------------------------------------------
+# GIT OWNERSHIP
+# ---------------------------------------------------------
+
+# The runtime owns the worktree lifecycle.
+# Aider must not commit, push, or manage git state.
+
+no-auto-commits: true
+
+dirty-commits: false
+
+# ---------------------------------------------------------
+# OUTPUT CONTROL
+# ---------------------------------------------------------
+
+show-model-warnings: false
+
+suggest-shell-commands: false
+
+detect-urls: false
+
+notifications: false
+
+# ---------------------------------------------------------
+# EDITING
+# ---------------------------------------------------------
+
+edit-format: whole
+
+encoding: utf-8
+
+line-endings: lf
+
+# ---------------------------------------------------------
+# CACHE
+# ---------------------------------------------------------
+
+cache-prompts: false

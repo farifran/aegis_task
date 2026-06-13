@@ -52,6 +52,7 @@ Discovery reads the following fields and nothing else:
 | `topology_summary` | Precomputed aggregate counts. Copy directly into output. |
 | `ranked_targets` | Precomputed deterministic targets. Copy directly into output. |
 | `gap_counts` | Precomputed deterministic gap counts. Copy directly into output. |
+| `observed_request_alignment` | Runtime-resolved explicit paths from investigation_input. Copy directly into output. |
 
 ### Supporting evidence (when builder payload is unavailable)
 
@@ -79,11 +80,19 @@ Do not edit, supplement, or interpret any field.
 
 Copy `ranked_targets` verbatim into the output.
 Do not filter, reorder, or alter any target object.
+`ranked_targets` entries with `type: "explicit_request"` appear first (injected by the runtime).
+Do not reorder them behind topology entries.
 
 ### gap_counts
 
 Copy `gap_counts` verbatim into the output.
 Do not calculate new counts or explain them.
+
+### observed_request_alignment
+
+Copy `observed_request_alignment` verbatim into the output.
+Do not modify `requested_paths`, `resolved_paths`, or `resolution_confidence`.
+If `observed_request_alignment` is absent from the builder payload, omit the field from output.
 
 ---
 
@@ -103,6 +112,12 @@ No explanations.
 {
   "mode": "discovery",
 
+  "observed_request_alignment": {
+    "requested_paths": ["src/index.ts"],
+    "resolved_paths": ["src/index.ts"],
+    "resolution_confidence": "high"
+  },
+
   "topology_summary": {
     "total_nodes": 0,
     "total_edges": 0,
@@ -117,6 +132,13 @@ No explanations.
   },
 
   "ranked_targets": [
+    {
+      "id": "explicit_target_001",
+      "type": "explicit_request",
+      "file": "src/index.ts",
+      "surface_ref": "surface_cluster_001",
+      "reason": "observed_request_alignment:direct_match"
+    },
     {
       "id": "bridge_001",
       "type": "bridge",
@@ -162,11 +184,16 @@ The following patterns are prohibited in any Discovery output:
 | Prohibited | Permitted |
 |---|---|
 | `"This surface is highly connected"` | (No prose allowed) |
-| File paths or names | Element IDs only (e.g. `bridge_001`) |
+| File paths invented by the model | Runtime-observed paths in `observed_request_alignment` or `explicit_request` entries |
 | `"attention_reason": "dense cluster"` | (No custom reasons) |
 | `"description": "No gaps detected"` | `"visibility_gap_count": 0` |
 | Invented topology ids | Builder-assigned ids only |
 | Renamed topology elements | Original builder ids only |
+
+File paths are permitted **only** in:
+- `observed_request_alignment.requested_paths`
+- `observed_request_alignment.resolved_paths`
+- `ranked_targets` entries where `type == "explicit_request"`
 
 ---
 

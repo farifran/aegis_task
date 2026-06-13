@@ -201,13 +201,16 @@ PY
 # JSON EMISSION
 # =========================================================
 
+_TMPFILE="$(mktemp)"
+printf '%s' "${REFS_JSON}" > "${_TMPFILE}"
+
 jq -n \
   --arg capability "filesystem.extract_references" \
   --arg classification "readonly" \
   --arg execution_id "${AEGIS_EXECUTION_ID:-unknown}" \
   --arg generated_at "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" \
   --arg target "${TARGET_PATH}" \
-  --argjson references "${REFS_JSON}" \
+  --slurpfile references "${_TMPFILE}" \
   '{
     success: true,
     capability: $capability,
@@ -216,7 +219,9 @@ jq -n \
     generated_at: $generated_at,
     payload: {
       target: $target,
-      references: $references
+      references: $references[0]
     },
     error: null
   }'
+
+rm -f "${_TMPFILE}"

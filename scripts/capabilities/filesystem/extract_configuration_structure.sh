@@ -216,13 +216,16 @@ PY
 # JSON EMISSION
 # =========================================================
 
+_TMPFILE="$(mktemp)"
+printf '%s' "${CONFIG_JSON}" > "${_TMPFILE}"
+
 jq -n \
   --arg capability "filesystem.extract_configuration_structure" \
   --arg classification "readonly" \
   --arg execution_id "${AEGIS_EXECUTION_ID:-unknown}" \
   --arg generated_at "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" \
   --arg target "${TARGET_PATH}" \
-  --argjson config_structures "${CONFIG_JSON}" \
+  --slurpfile config_structures "${_TMPFILE}" \
   '{
     success: true,
     capability: $capability,
@@ -231,7 +234,9 @@ jq -n \
     generated_at: $generated_at,
     payload: {
       target: $target,
-      config_structures: $config_structures
+      config_structures: $config_structures[0]
     },
     error: null
   }'
+
+rm -f "${_TMPFILE}"

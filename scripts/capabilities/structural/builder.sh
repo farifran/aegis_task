@@ -515,7 +515,82 @@ else:
             'reason': 'no_selected_surface:hotspot'
         })
 
-ranked_targets = ranked_targets[:10]
+# =========================================================
+# OBSERVED REQUEST ALIGNMENT
+# Resolve explicit file paths from investigation_input against
+# the known node set. Explicit targets take priority over
+# topology-based targets in ranked_targets.
+# =========================================================
+
+_node_set = set(nodes)
+_node_by_basename = {}
+_node_by_stem = {}
+for _n in nodes:
+    _bn = os.path.basename(_n)
+    _node_by_basename.setdefault(_bn, []).append(_n)
+    _stem_key = os.path.splitext(_bn)[0]
+    _node_by_stem.setdefault(_stem_key, []).append(_n)
+
+# Extract path-like tokens from the investigation input
+_path_re = re.compile(
+    r'(?:[a-zA-Z0-9_\-\.]+/)+[a-zA-Z0-9_\-\.]+\.[a-zA-Z0-9]+'  # relative path: foo/bar.ts
+    r'|'
+    r'\b[a-zA-Z0-9_\-]+\.[a-zA-Z]{1,5}\b'                        # filename: index.ts
+)
+
+_requested_paths = []
+for _m in _path_re.finditer(investigation_input):
+    _cand = _m.group(0).replace('\\', '/')
+    if _cand not in _requested_paths:
+        _requested_paths.append(_cand)
+
+_resolved_paths = []
+for _req in _requested_paths:
+    if _req in _node_set:
+        if _req not in _resolved_paths:
+            _resolved_paths.append(_req)
+    else:
+        _bn = os.path.basename(_req)
+        if _bn in _node_by_basename:
+            for _cand in _node_by_basename[_bn]:
+                if _cand not in _resolved_paths:
+                    _resolved_paths.append(_cand)
+        else:
+            _stem_key = os.path.splitext(_bn)[0]
+            for _cand in _node_by_stem.get(_stem_key, []):
+                if _cand not in _resolved_paths:
+                    _resolved_paths.append(_cand)
+
+if _resolved_paths:
+    _direct = [p for p in _resolved_paths if p in _requested_paths]
+    _alignment_confidence = 'high' if _direct else 'partial'
+else:
+    _alignment_confidence = 'none'
+
+observed_request_alignment = {
+    'requested_paths':       _requested_paths,
+    'resolved_paths':        _resolved_paths,
+    'resolution_confidence': _alignment_confidence,
+}
+
+# Inject explicit targets at the front; topology fills remaining slots
+_explicit_targets = [
+    {
+        'id':          f'explicit_target_{_i:03d}',
+        'type':        'explicit_request',
+        'file':        _rp,
+        'surface_ref': surface_of.get(_rp, None),
+        'reason':      'observed_request_alignment:direct_match'
+                       if _rp in _requested_paths
+                       else 'observed_request_alignment:basename_match',
+    }
+    for _i, _rp in enumerate(_resolved_paths, 1)
+]
+
+_total_slots     = 10
+_explicit_count  = min(len(_explicit_targets), _total_slots)
+_topology_slots  = _total_slots - _explicit_count
+ranked_targets   = _explicit_targets[:_explicit_count] + ranked_targets[:_topology_slots]
 
 # =========================================================
 # TOPOLOGY SUMMARY & GAP COUNTS — deterministic counts
@@ -573,10 +648,11 @@ gap_counts = {
 # =========================================================
 
 result = {
-    'topology_summary': topology_summary,
-    'ranked_targets':   ranked_targets,
-    'gap_counts':       gap_counts,
-    'consumed_payloads': consumed_payloads,
+    'topology_summary':          topology_summary,
+    'ranked_targets':            ranked_targets,
+    'gap_counts':                gap_counts,
+    'consumed_payloads':         consumed_payloads,
+    'observed_request_alignment': observed_request_alignment,
 }
 
 print(json.dumps(result))
@@ -587,13 +663,16 @@ PY
 # JSON EMISSION
 # =========================================================
 
+_TMPFILE="$(mktemp)"
+printf '%s' "${TOPOLOGY_JSON}" > "${_TMPFILE}"
+
 jq -n \
   --arg capability "structural.builder" \
   --arg classification "readonly" \
   --arg execution_id "${AEGIS_EXECUTION_ID:-unknown}" \
   --arg generated_at "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" \
   --arg target "${TARGET_PATH}" \
-  --argjson result "${TOPOLOGY_JSON}" \
+  --slurpfile result "${_TMPFILE}" \
   '{
     success: true,
     capability: $capability,
@@ -602,10 +681,13 @@ jq -n \
     generated_at: $generated_at,
     payload: {
       target: $target,
-      topology_summary:       $result.topology_summary,
-      ranked_targets:         $result.ranked_targets,
-      gap_counts:             $result.gap_counts,
-      consumed_payloads:      $result.consumed_payloads
+      topology_summary:            $result[0].topology_summary,
+      ranked_targets:              $result[0].ranked_targets,
+      gap_counts:                  $result[0].gap_counts,
+      consumed_payloads:           $result[0].consumed_payloads,
+      observed_request_alignment:  $result[0].observed_request_alignment
     },
     error: null
   }'
+
+rm -f "${_TMPFILE}"

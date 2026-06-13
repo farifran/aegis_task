@@ -170,13 +170,18 @@ PY
 # JSON EMISSION
 # =========================================================
 
+# Write SYMBOLS_JSON to a temp file to avoid "Argument list too long"
+# when passing large payloads as shell arguments to jq.
+_SYMBOLS_TMPFILE="$(mktemp)"
+printf '%s' "${SYMBOLS_JSON}" > "${_SYMBOLS_TMPFILE}"
+
 jq -n \
   --arg capability "filesystem.extract_symbols" \
   --arg classification "readonly" \
   --arg execution_id "${AEGIS_EXECUTION_ID:-unknown}" \
   --arg generated_at "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" \
   --arg target "${TARGET_PATH}" \
-  --argjson symbol_extractions "${SYMBOLS_JSON}" \
+  --slurpfile symbol_extractions "${_SYMBOLS_TMPFILE}" \
   '{
     success: true,
     capability: $capability,
@@ -185,7 +190,9 @@ jq -n \
     generated_at: $generated_at,
     payload: {
       target: $target,
-      symbol_extractions: $symbol_extractions
+      symbol_extractions: $symbol_extractions[0]
     },
     error: null
   }'
+
+rm -f "${_SYMBOLS_TMPFILE}"
