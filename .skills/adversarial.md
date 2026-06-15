@@ -208,6 +208,14 @@ The mode must emit:
 - no explanations;
 - no assistant narration.
 
+### candidate_result Identity Constraint
+
+The `candidate_result` object (containing `source_mode`, `diff`, and `files_changed`) MUST be copied byte-for-byte, literally and verbatim, from the input/evidence snapshot of the candidate being challenged.
+- Do NOT reformat, re-indent, normalize, or rewrite the `diff` text.
+- Do NOT modify line endings, whitespace, or empty lines in the `diff`.
+- Copy all fields exactly as they are provided in the capability payload evidence.
+- Any mismatch, even by a single character or line ending, will trigger an `adversarial_candidate_mismatch` error and fail the execution.
+
 The required artifact fields are:
 
 ```json

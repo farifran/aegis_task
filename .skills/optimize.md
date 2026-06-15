@@ -173,9 +173,11 @@ Optimize must preserve:
 
 Optimize must NOT:
 - perform speculative redesign;
-- expand scope unnecessarily;
+- expand scope, add new features, or implement unsolicited functions;
 - introduce unrelated abstractions;
-- increase orchestration complexity.
+- increase orchestration complexity;
+- modify files or functions not involved in the preceding repair;
+- implement extra functions (e.g. do NOT implement functions not directly requested or repaired in the preceding step). Speculative scope expansion or unsolicited logic is strictly prohibited and will cause validation rejection.
 
 KISS remains mandatory.
 

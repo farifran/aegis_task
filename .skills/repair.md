@@ -135,6 +135,13 @@ Repair should avoid:
 * semantic overreach;
 * unnecessary restructuring.
 
+Repair MUST NOT under any circumstance:
+
+* implement any function, class, variable, import, or logic not explicitly requested by the investigation input.
+* add extra features, functions, placeholders, or speculative implementation details.
+* modify files or code regions not directly target by the requested fix.
+* expand the scope of the request (e.g. if asked to "add a subtraction function", you must NOT add a multiplication function or any other extra elements). Any unsolicited logic addition will trigger a validation rejection.
+
 ⸻
 
 Authorized Reasoning Scope

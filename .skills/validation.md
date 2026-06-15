@@ -197,6 +197,14 @@ Validation must emit:
 - no conversational commentary;
 - no assistant narration.
 
+### validated_candidate Identity Constraint
+
+The `validated_candidate` object (containing `source_mode`, `diff`, and `files_changed`) MUST be copied byte-for-byte, literally and verbatim, from the input/evidence candidate under judgment (`candidate_result` under `artifact_snapshot`).
+- Do NOT reformat, re-indent, normalize, or rewrite the `diff` text.
+- Do NOT modify line endings, whitespace, or empty lines in the `diff`.
+- Copy all fields exactly as they are provided in the capability payload evidence.
+- Any mismatch, even by a single character or line ending, will trigger a `validation_candidate_mismatch` error and fail the execution.
+
 The required artifact shape is:
 
 ```json

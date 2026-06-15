@@ -383,18 +383,21 @@ You must:
 - emit only JSON
 - remain bounded
 
-You must emit:
+You must emit the output in this exact format:
 
 ${AEGIS_ARTIFACT_BEGIN_MARKER}
-<json>
+{
+  "mode": "${AEGIS_MODE}",
+  ...
+}
 ${AEGIS_ARTIFACT_END_MARKER}
 
 The payload MUST:
-- be valid JSON
-- contain the correct mode
-- avoid prose
-- avoid markdown
-- avoid explanations
+- be a valid JSON object ONLY.
+- contain no HTML tags, no XML tags, no markdown block wrappers (do NOT wrap the JSON in triple-backtick code blocks, do NOT use "json" or "<json>" tag wrappers).
+- contain no prose, no conversational explanations, no markdown notes.
+- have the opening brace '{' of the JSON object immediately on the line after ${AEGIS_ARTIFACT_BEGIN_MARKER}.
+- have the closing brace '}' of the JSON object immediately on the line before ${AEGIS_ARTIFACT_END_MARKER}.
 
 Execution identity:
 ${AEGIS_EXECUTION_ID}
