@@ -8,9 +8,9 @@
 # readonly
 #
 # Responsibilities:
-# - execute the test suite (npm run aegis:test)
+# - execute candidate test suite if configured
+# - prevent recursion with harness tests
 # - parse test output and status into Aegis standard JSON payload
-# - support direct execution (e.g. for test-cmd in Aider)
 #
 # =========================================================
 
@@ -27,12 +27,27 @@ run_tests() {
   local exit_code=0
   local test_output=""
   
-  # Run npm run aegis:test and capture output
-  test_output="$(npm run aegis:test 2>&1)" || exit_code=$?
+  # Check if a custom non-harness test script is in package.json
+  if jq -e '.scripts.test and .scripts.test != "echo \"Error: no test specified\" && exit 1"' package.json >/dev/null 2>&1; then
+    test_output="$(npm test 2>&1)" || exit_code=$?
+  elif [[ -f "node_modules/.bin/vitest" ]]; then
+    test_output="$(node_modules/.bin/vitest run 2>&1)" || exit_code=$?
+  elif [[ -f "node_modules/.bin/jest" ]]; then
+    test_output="$(node_modules/.bin/jest 2>&1)" || exit_code=$?
+  else
+    # No candidate tests configured
+    if [[ -n "${IS_JSON_OUTPUT}" ]]; then
+      emit_aegis_json "passed" "No candidate unit tests configured."
+      exit 0
+    else
+      echo "No candidate unit tests configured."
+      exit 0
+    fi
+  fi
   
   if [[ "${exit_code}" -eq 0 ]]; then
     if [[ -n "${IS_JSON_OUTPUT}" ]]; then
-      emit_aegis_json "passed" "All tests passed successfully."
+      emit_aegis_json "passed" "${test_output}"
       exit 0
     else
       echo "${test_output}"
@@ -54,7 +69,6 @@ emit_aegis_json() {
   local status="$1"
   local summary="$2"
   
-  # Create a clean, safe JSON payload, keeping summary small or bounded if needed
   jq -n \
     --arg capability "test.run" \
     --arg classification "readonly" \
