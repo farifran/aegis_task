@@ -93,3 +93,10 @@ cache-prompts: false
 exit: true
 
 show-model-warnings: false
+
+# ---------------------------------------------------------
+# UPDATE CHECK
+# ---------------------------------------------------------
+
+check-update: false
+

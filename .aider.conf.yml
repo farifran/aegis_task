@@ -55,3 +55,9 @@ line-endings: lf
 # are governed separately through:
 #
 # .aider.empty.conf.yml
+
+# ---------------------------------------------------------
+# UPDATE CHECK
+# ---------------------------------------------------------
+
+check-update: false

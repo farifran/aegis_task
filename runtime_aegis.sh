@@ -39,7 +39,7 @@
 # - mutate implicitly
 #
 # =========================================================
-if [[ -f ".harness/local.env" ]]; then
+if [[ -f ".harness/local.env" ]] && [[ "${OPENAI_API_KEY:-}" != *test-key* ]]; then
     source ".harness/local.env"
 fi
 set -Eeuo pipefail

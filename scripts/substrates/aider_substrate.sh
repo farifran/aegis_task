@@ -475,6 +475,9 @@ invoke_aider() {
   aider_log "Invoking aider mutation substrate..."
   aider_log "Model: ${AEGIS_AIDER_MODEL}"
   aider_log "Targets: ${file_args[*]:-<none>}"
+  aider_log "Actual aider command to be executed:"
+  printf '%q ' "${aider_cmd[@]}" >&2
+  echo >&2
 
   AEGIS_AIDER_OUTPUT_LOG="$(aider_mktemp)"
 
@@ -611,6 +614,29 @@ main() {
     invoke_aider "${prompt_file}" "${mutation_targets[@]}"
   else
     invoke_aider "${prompt_file}"
+  fi
+
+  echo "=== WORKTREE STATUS ===" >&2
+  git \
+    --git-dir="${AEGIS_MUTATION_GIT_DIR}" \
+    --work-tree="${AEGIS_EXECUTION_SURFACE_PATH}" \
+    status --short >&2
+
+  echo "=== WORKTREE HEAD ===" >&2
+  git \
+    --git-dir="${AEGIS_MUTATION_GIT_DIR}" \
+    --work-tree="${AEGIS_EXECUTION_SURFACE_PATH}" \
+    rev-parse HEAD >&2
+
+  if [[ "${#mutation_targets[@]}" -gt 0 ]]; then
+    for f in "${mutation_targets[@]}"; do
+      echo "=== TARGET FILE: ${f} ===" >&2
+      if [[ -f "${AEGIS_EXECUTION_SURFACE_PATH}/${f}" ]]; then
+        cat "${AEGIS_EXECUTION_SURFACE_PATH}/${f}" >&2
+      else
+        echo "(file does not exist)" >&2
+      fi
+    done
   fi
 
   aider_log "Capturing worktree diff..."
