@@ -68,27 +68,35 @@ not validation input.
 
 ### Primary evidence — structural.builder payload
 
-The `structural.builder` payload is the sole evidence source for topology.
-The `runtime.attention_seed` payload is the sole source for attention routing.
+The `structural.builder` payload is the evidence source for topology.
+The `runtime.attention_seed` payload is the source for attention routing and operational compression.
 
-Discovery reads the following fields and nothing else:
+### Runtime-injected structural fields (NOT in Discovery output)
+
+The following fields are produced by `structural.builder` and injected into
+`artifact_snapshot` by the runtime during `promote_epistemic_handover`.
+Discovery does NOT emit these fields. The runtime reads them from the
+builder payload and writes them to the handover directly.
+
+- `topology_summary` — runtime-injected
+- `topology_index` — runtime-injected
+- `ranked_targets` — runtime-injected
+- `observed_request_alignment` — runtime-injected
+- `gap_counts` — runtime-injected
+- `evidence` — runtime-injected
+- `unresolved_references` — runtime-injected
+
+### Discovery output fields (copied from runtime capabilities)
 
 | Field | Source capability | What it is |
 |---|---|---|
-| `topology_summary` | `structural.builder` | Graph-derived topology counts (nodes, edges, surfaces, bridges, boundaries, hotspots, entrypoints). Copy directly into output. |
-| `evidence` | `structural.builder` | Observed coverage and payload health. Contains `coverage` and `payload_status` sub-objects. Copy directly into output. |
 | `runtime_summary` | `structural.builder` | Deterministic one-line topology summary. Copy directly into output as `summary`. |
-| `runtime_findings` | `structural.builder` | Deterministic structural findings derived from topology data. Copy directly into output as `findings`. |
-| `ranked_targets` | `structural.builder` | Precomputed deterministic targets with score and ranking_reason. Copy directly into output. |
-| `gap_counts` | `structural.builder` | Precomputed deterministic gap counts. Copy directly into output. |
-| `topology_index` | `structural.builder` | Topology ID resolution table (surfaces, bridges, boundaries, hotspots, entrypoints, node_index with relation_visibility). Copy directly into output. |
-| `unresolved_references` | `structural.builder` | References found by the extractor that could not be resolved to a node. Copy directly into output. |
-| `observed_request_alignment` | `structural.builder` | Runtime-resolved explicit paths from investigation_input. Copy directly into output. |
-| `handover_attention` | `runtime.attention_seed` | Deterministic attention seed (explicit > hotspot > bridge > entrypoint). Copy directly into output. |
-| `investigation_scope` | `runtime.attention_seed` | Operational scope derived from request alignment + attention state. Copy directly into output. |
+| `runtime_findings` | `structural.builder` | Deterministic structural findings. Copy directly into output as `findings`. |
+| `handover_attention` | `runtime.attention_seed` | Deterministic attention seed. Copy directly into output. |
+| `investigation_scope` | `runtime.attention_seed` | Operational scope. Copy directly into output. |
 | `blocking_conditions` | `runtime.attention_seed` | Factual conditions impeding investigation. Copy directly into output. |
-| `attention_targets` | `runtime.attention_seed` | Hotspots in the investigation scope. Copy directly into output. |
-| `relevant_surfaces` | `runtime.attention_seed` | Surfaces containing attention/scope targets. Copy directly into output. |
+| `attention_targets` | `runtime.attention_seed` | Hotspots in scope. Copy directly into output. |
+| `relevant_surfaces` | `runtime.attention_seed` | Surfaces containing targets. Copy directly into output. |
 | `critical_relationships` | `runtime.attention_seed` | Bridges connecting relevant surfaces. Copy directly into output. |
 
 ### Provenance declaration
@@ -121,62 +129,28 @@ Lower-priority evidence must not override higher-priority evidence.
 
 ## READING & EMISSION RULES
 
-### topology_summary
+### Structural fields — NOT emitted by Discovery
 
-Copy `topology_summary` verbatim into the output.
-Do not edit, supplement, or interpret any field.
+The following fields are runtime-injected into `artifact_snapshot` by
+`promote_epistemic_handover` from the `structural.builder` payload.
+Discovery does NOT emit them in its output:
+- `topology_summary`
+- `topology_index`
+- `ranked_targets`
+- `observed_request_alignment`
+- `gap_counts`
+- `evidence`
+- `unresolved_references`
 
-### evidence
-
-Copy `evidence` verbatim into the output.
-Do not edit, supplement, or interpret any field.
-`evidence` is separate from `topology_summary`: topology describes the graph,
-evidence describes what was observed about coverage and payload health.
-
-### ranked_targets
-
-Copy `ranked_targets` verbatim into the output.
-Do not filter, reorder, or alter any target object.
-`ranked_targets` entries with `type: "explicit_request"` appear first (injected by the runtime).
-Do not reorder them behind topology entries.
-Each entry includes a `score` field — a deterministic numeric priority computed by the runtime.
-Discovery does not interpret the score. It copies it.
-
-### gap_counts
-
-Copy `gap_counts` verbatim into the output.
-Do not calculate new counts or explain them.
-
-### observed_request_alignment
-
-Copy `observed_request_alignment` verbatim into the output.
-Do not modify `requested_paths`, `resolved_paths`, or `resolution_confidence`.
-If `observed_request_alignment` is absent from the builder payload, omit the field from output.
-
-### unresolved_references
-
-Copy `unresolved_references` verbatim into the output.
-Do not interpret, filter, or alter any entry.
-`unresolved_references` is evidence collected by the extractor: references
-found in source (import/source/require/bash) whose target could not be
-resolved to a node. Discovery does not diagnose why a reference is unresolved.
-If `unresolved_references` is absent from the builder payload, omit the field from output.
+If the LLM accidentally emits any of these, the runtime strips them and
+replaces with the builder-produced versions. The LLM cannot corrupt
+structural data.
 
 ### evidence_refs
 
 Emit `evidence_refs` as a list of runtime capability names that produced the evidence consumed.
 This is provenance declaration, not interpretation.
 List every capability whose payload was read. Do not list capabilities that were not consumed.
-
-### topology_index
-
-Copy `topology_index` verbatim into the output.
-Do not interpret, filter, or alter any entry.
-`topology_index` is reference data for downstream resolution — it maps
-topology IDs to file paths so that Forensics, Repair, Optimize, and
-Validation can resolve structural IDs without recalculating topology.
-Discovery does not interpret `topology_index`. It copies it.
-If `topology_index` is absent from the builder payload, omit the field from output.
 
 ### handover_attention
 
@@ -215,121 +189,11 @@ No explanations.
 {
   "mode": "discovery",
 
-  "observed_request_alignment": {
-    "requested_paths": ["src/index.ts"],
-    "resolved_paths": ["src/index.ts"],
-    "resolution_confidence": "high"
-  },
-
-  "unresolved_references": [
-    {
-      "from": "runtime_aegis.sh",
-      "target": ".harness/config.sh",
-      "type": "source"
-    }
-  ],
-
   "evidence_refs": [
     "structural.builder",
+    "runtime.attention_seed",
     "filesystem.read:epistemic_handover"
   ],
-
-  "topology_summary": {
-    "total_nodes": 0,
-    "total_edges": 0,
-    "surface_count": 0,
-    "boundary_count": 0,
-    "bridge_count": 0,
-    "hotspot_count": 0,
-    "isolated_node_count": 0,
-    "entrypoint_count": 0
-  },
-
-  "evidence": {
-    "coverage": {
-      "test_covered_file_count": 0,
-      "config_file_count": 0,
-      "uncovered_hotspot_count": 0
-    },
-    "payload_status": {
-      "consumed_payload_ok_count": 0,
-      "consumed_payload_missing_count": 0,
-      "consumed_payload_failed_count": 0
-    }
-  },
-
-  "ranked_targets": [
-    {
-      "id": "explicit_target_001",
-      "type": "explicit_request",
-      "file": "src/index.ts",
-      "surface_ref": "surface_cluster_001",
-      "score": 100,
-      "reason": "observed_request_alignment:direct_match"
-    },
-    {
-      "id": "bridge_001",
-      "type": "bridge",
-      "surface_ref": "surface_cluster_001",
-      "score": 4,
-      "reason": "highest_bridge_count_surface:bridge"
-    }
-  ],
-
-  "gap_counts": {
-    "visibility_gap_count": 0,
-    "coverage_gap_count": 0,
-    "relationship_gap_count": 0,
-    "scope_gap_count": 0
-  },
-
-  "topology_index": {
-    "surfaces": [
-      {
-        "id": "surface_cluster_001",
-        "member_count": 5,
-        "dominant_node": "src/index.ts",
-        "bridge_count": 2,
-        "boundary_count": 1,
-        "hotspot_count": 1,
-        "entrypoint_count": 1
-      }
-    ],
-    "bridges": [
-      {
-        "id": "bridge_001",
-        "from": "src/index.ts",
-        "to": "src/db.ts",
-        "surface_ref": "surface_cluster_001"
-      }
-    ],
-    "boundaries": [
-      {
-        "id": "boundary_001",
-        "file": "src/db.ts",
-        "in_degree": 3,
-        "out_degree": 0,
-        "surface_ref": "surface_cluster_001"
-      }
-    ],
-    "hotspots": [
-      {
-        "id": "hotspot_001",
-        "file": "src/index.ts",
-        "in_degree": 2,
-        "out_degree": 2,
-        "total_degree": 4,
-        "surface_ref": "surface_cluster_001"
-      }
-    ],
-    "entrypoints": [
-      {
-        "id": "entrypoint_001",
-        "file": "src/main.ts",
-        "surface_ref": "surface_cluster_001"
-      }
-    ]
-  },
 
   "handover_attention": {
     "next_attention_targets": ["src/index.ts"],
@@ -337,19 +201,18 @@ No explanations.
     "attention_reason": "observed_request_alignment direct match"
   },
 
-  "summary": "81 nodes, 12 edges, 5 surfaces. Largest surface has 8 members and 7 bridges. 64 nodes are isolated.",
+  "summary": "81 nodes, 12 edges, 5 cluster surfaces, 65 standalone surfaces. 17 connected, 65 isolated.",
 
   "observations": [
     "surface_cluster_001 has 8 members and 7 bridges",
-    "64 of 81 nodes have no observed relationships (relation_visibility: none_observed)",
-    "11 nodes have relation_visibility: observation_limited"
+    "65 of 82 nodes have no observed relationships (relation_visibility: none_observed)",
+    "22 unresolved references detected"
   ],
 
   "findings": [
     {
-      "finding": "64 isolated nodes suggest the extractor may be missing relationships",
-      "evidence_refs": ["structural.builder", "unresolved_references"],
-      "topology_refs": ["isolated_node_count: 64"]
+      "finding": "65 of 82 nodes are isolated (79%)",
+      "topology_refs": ["isolated_node_count: 65"]
     }
   ],
 
@@ -464,21 +327,23 @@ Examples:
 ## FAILURE POLICY
 
 If `structural.builder` payload is unavailable or failed:
-- Set `topology_summary` to all-zero values.
-- Set `evidence` to all-zero values (both `coverage` and `payload_status`).
-- Set `ranked_targets` to `[]`.
-- Set `gap_counts` to all-zero values (or count visibility gap from missing payloads).
-- Set `unresolved_references` to `[]`.
-- Set `evidence_refs` to the capabilities actually read (e.g. `["filesystem.read:epistemic_handover"]` if only the handover was available).
+- Structural fields (`topology_summary`, `topology_index`, `ranked_targets`,
+  `observed_request_alignment`, `gap_counts`, `evidence`, `unresolved_references`)
+  are NOT emitted by Discovery — the runtime injects them. If the builder
+  payload is missing, the runtime will omit them from `artifact_snapshot`,
+  and downstream mode preconditions will fail with a clear error.
+- Set `evidence_refs` to the capabilities actually read.
 - Set `investigation_scope` to `{"scope_type": "none", "scope_targets": [], "scope_confidence": "none"}`.
 - Set `blocking_conditions` to `["required evidence payload missing"]`.
 - Set `attention_targets` to `[]`.
 - Set `relevant_surfaces` to `[]`.
 - Set `critical_relationships` to `[]`.
-- Omit `topology_index` entirely.
+- Set `findings` to `[]`.
+- Omit `summary` if `runtime_summary` is absent.
 
 Do not infer topology.
 Do not describe why topology is absent.
+Do not emit structural fields — they are runtime-owned.
 
 ---
 

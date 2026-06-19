@@ -371,6 +371,7 @@ invoke_capability_handler() {
     AEGIS_EPISTEMIC_HANDOVER_FILE="${AEGIS_EPISTEMIC_HANDOVER_FILE_INPUT:-}" \
     AEGIS_INVESTIGATION_INPUT="${AEGIS_INVESTIGATION_INPUT:-}" \
     AEGIS_EVIDENCE_TARGET_PATH="${AEGIS_EVIDENCE_TARGET_PATH:-.}" \
+    AEGIS_CAPABILITY_PAYLOAD_DIR="${AEGIS_CAPABILITY_PAYLOAD_DIR:-}" \
     bash "${handler}" "${capability_argument}"
 }
 
@@ -772,17 +773,17 @@ validate_artifact() {
         and (
           [
             $previous_discovery.artifact_snapshot
-              .observed_request_alignment.resolved_paths[]?,
-            ($previous_discovery.artifact_snapshot.ranked_targets[]?
+              .structural_context.observed_request_alignment.resolved_paths[]?,
+            ($previous_discovery.artifact_snapshot.structural_context.ranked_targets[]?
               | select(.type == "explicit_request")
               | .file),
             $previous_discovery.epistemic_state.next_attention_targets[]?,
-            ($previous_discovery.artifact_snapshot.topology_index.boundaries[]?.file),
-            ($previous_discovery.artifact_snapshot.topology_index.hotspots[]?.file),
-            ($previous_discovery.artifact_snapshot.topology_index.entrypoints[]?.file),
-            ($previous_discovery.artifact_snapshot.topology_index.bridges[]?.from),
-            ($previous_discovery.artifact_snapshot.topology_index.bridges[]?.to),
-            ($previous_discovery.artifact_snapshot.topology_index.surfaces[]?.members[]?)
+            ($previous_discovery.artifact_snapshot.structural_context.topology_index.boundaries[]?.file),
+            ($previous_discovery.artifact_snapshot.structural_context.topology_index.hotspots[]?.file),
+            ($previous_discovery.artifact_snapshot.structural_context.topology_index.entrypoints[]?.file),
+            ($previous_discovery.artifact_snapshot.structural_context.topology_index.bridges[]?.from),
+            ($previous_discovery.artifact_snapshot.structural_context.topology_index.bridges[]?.to),
+            ($previous_discovery.artifact_snapshot.structural_context.topology_index.surfaces[]?.members[]?)
           ]
           | unique
         ) as $authorized_targets

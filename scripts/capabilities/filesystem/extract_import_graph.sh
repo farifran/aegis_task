@@ -151,6 +151,9 @@ for f in all_files:
 
     ext = os.path.splitext(f)[1].lower()
     resolved = []
+    unresolved = []   # observed targets that could not be resolved to a file
+                      # (pruned path, missing file, out-of-scope). Preserved as
+                      # structural evidence without materializing a synthetic node.
 
     if ext == '.py':
         targets = re.findall(r'^\s*from\s+([a-zA-Z0-9_\.]+)', content, re.MULTILINE)
@@ -169,6 +172,8 @@ for f in all_files:
             ])
             if cand:
                 resolved.append(cand)
+            else:
+                unresolved.append(t)
 
     elif ext in ['.js', '.jsx', '.ts', '.tsx']:
         targets = re.findall(r'import\s+.*?\s+from\s+[\'"]([^\'"]+)[\'"]', content)
@@ -181,8 +186,12 @@ for f in all_files:
                 cand = resolve_existing([base + ext2 for ext2 in ['.js', '.jsx', '.ts', '.tsx', '/index.js', '/index.ts']])
                 if cand:
                     resolved.append(cand)
+                else:
+                    unresolved.append(t)
             elif t in all_files:
                 resolved.append(t)
+            else:
+                unresolved.append(t)
 
     elif ext in ['.sh', '.bash', ''] and os.path.isfile(f_abs):
         raw_sources = re.findall(r'^\s*source\s+([^\s\n#]+)', content, re.MULTILINE)
@@ -197,10 +206,21 @@ for f in all_files:
             ])
             if cand:
                 resolved.append(cand)
+            else:
+                unresolved.append(t)
 
-    unique = sorted(set(resolved))
-    if unique:
-        import_graph.append({"file": f, "imports": unique})
+    # Build imports list with resolution metadata.
+    # Every observed reference is emitted — resolved or not — so that the
+    # structural reality (a file references X) is preserved even when the
+    # target is pruned or missing. Unresolved targets do NOT become graph
+    # nodes downstream; they feed degree/fanout only.
+    imports = [{'target': t, 'resolved': True}  for t in sorted(set(resolved))]
+    imports += [{'target': t, 'resolved': False} for t in sorted(set(unresolved))]
+
+    # Always emit the entry. A file that references only pruned targets
+    # still has observed structural dependencies — omitting it would erase
+    # that evidence and falsely mark the file as having no relationships.
+    import_graph.append({"file": f, "imports": imports})
 
 print(json.dumps(import_graph))
 PY

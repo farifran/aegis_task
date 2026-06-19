@@ -880,35 +880,95 @@ promote_epistemic_handover() {
     || runtime_fatal "missing_promoted_artifact_for_handover"
 
   local handover_json
+  local builder_payload_path="${AEGIS_CAPABILITY_PAYLOAD_DIR}/structural_builder.json"
 
-  handover_json="$({
-    printf '%s' "${AEGIS_PROMOTED_ARTIFACT_PAYLOAD}" |
-      jq -c \
-        --arg generated_at "${AEGIS_EXECUTION_TIMESTAMP}" \
-        --arg investigation_input "${AEGIS_INVESTIGATION_INPUT}" '
-        {
-          artifact_snapshot: (
-            del(.handover_attention, .investigation_input)
-            | . + { investigation_input: $investigation_input }
-            | . + (
-                if has("generated_at")
-               then {}
-                else { generated_at: $generated_at 
+  # --- runtime-owned structural injection with epistemic separation ---
+  # artifact_snapshot is split into two explicit areas:
+  #   structural_context — runtime-owned facts (from structural.builder)
+  #   operational_context — discovery-owned interpretation/focus
+  # This makes the origin of truth explicit: structural data is produced
+  # mechanically by the runtime, operational data is produced cognitively
+  # by the Discovery mode. The LLM cannot corrupt structural data.
+  # mode, investigation_input, and generated_at stay at the top level
+  # of artifact_snapshot (they are metadata, not structural or operational).
+  if [[ -f "${builder_payload_path}" ]]; then
+    handover_json="$({
+      printf '%s' "${AEGIS_PROMOTED_ARTIFACT_PAYLOAD}" |
+        jq -c \
+          --arg generated_at "${AEGIS_EXECUTION_TIMESTAMP}" \
+          --arg investigation_input "${AEGIS_INVESTIGATION_INPUT}" \
+          --slurpfile builder "${builder_payload_path}" '
+          . as $orig
+          | ($builder[0].payload // {}) as $bp
+          | {
+              artifact_snapshot: {
+                mode: $orig.mode,
+                investigation_input: $investigation_input,
+                generated_at: (if $orig | has("generated_at") then $orig.generated_at else $generated_at end),
+                structural_context: {
+                  topology_summary:           $bp.topology_summary,
+                  topology_index:             $bp.topology_index,
+                  ranked_targets:             $bp.ranked_targets,
+                  observed_request_alignment: $bp.observed_request_alignment,
+                  gap_counts:                 $bp.gap_counts,
+                  evidence:                   $bp.evidence,
+                  unresolved_references:      $bp.unresolved_references
+                },
+                operational_context: (
+                  $orig
+                  | del(.handover_attention, .mode, .investigation_input,
+                        .topology_summary, .topology_index, .ranked_targets,
+                        .observed_request_alignment, .gap_counts, .evidence,
+                        .unresolved_references, .generated_at)
+                )
+              },
+              epistemic_state: (
+                $orig.handover_attention //
+                {
+                  next_attention_targets: [],
+                  attention_scope: "none",
+                  attention_reason: "no active attention"
                 }
-                end
               )
-          ),
-          epistemic_state: (
-            .handover_attention //
-            {
-              next_attention_targets: [],
-              attention_scope: "none",
-              attention_reason: "no active attention"
             }
-          )
-        }
-      '
-})" || runtime_fatal "failed_to_materialize_handover"
+        '
+    })" || runtime_fatal "failed_to_materialize_handover"
+  else
+    # Builder payload missing — promote without structural injection.
+    # structural_context will be empty; downstream mode preconditions
+    # will fail with a clear error.
+    handover_json="$({
+      printf '%s' "${AEGIS_PROMOTED_ARTIFACT_PAYLOAD}" |
+        jq -c \
+          --arg generated_at "${AEGIS_EXECUTION_TIMESTAMP}" \
+          --arg investigation_input "${AEGIS_INVESTIGATION_INPUT}" '
+          . as $orig
+          | {
+              artifact_snapshot: {
+                mode: .mode,
+                investigation_input: $investigation_input,
+                generated_at: (if has("generated_at") then .generated_at else $generated_at end),
+                structural_context: {},
+                operational_context: (
+                  $orig
+                  | del(.handover_attention, .mode, .investigation_input,
+                        .topology_summary, .topology_index, .ranked_targets,
+                        .observed_request_alignment, .gap_counts, .evidence,
+                        .unresolved_references, .generated_at)
+                )
+              },
+              epistemic_state: (
+                .handover_attention //
+                {
+                  next_attention_targets: [],
+                  attention_scope: "none",
+                  attention_reason: "no active attention"
+                }
+              )
+            }
+        '
+    })" || runtime_fatal "failed_to_materialize_handover"
+  fi
   write_runtime_owned_epistemic_handover \
   "${AEGIS_EPISTEMIC_HANDOVER_FILE}" \
   "$(printf '%s' "${handover_json}" | jq -c '.artifact_snapshot')" \

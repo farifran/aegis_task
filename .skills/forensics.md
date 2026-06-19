@@ -63,8 +63,9 @@ Forensics must not reinterpret that field as a new demand or a new investigation
 When the preceding artifact snapshot has `mode: "discovery"`, Forensics must
 consume these fields as an explicit routing contract:
 
-- `artifact_snapshot.observed_request_alignment.resolved_paths` — **file paths only**
-- `artifact_snapshot.ranked_targets` — only entries where `type == "explicit_request"`, using the `.file` field
+**Structural context (runtime-owned, mechanically produced):**
+- `artifact_snapshot.structural_context.observed_request_alignment.resolved_paths` — **file paths only**
+- `artifact_snapshot.structural_context.ranked_targets` — only entries where `type == "explicit_request"`, using the `.file` field
 - `epistemic_state.next_attention_targets`
 
 These fields route inspection. They are not evidence and must not be copied
@@ -73,22 +74,22 @@ runtime-exposed capability payloads.
 
 ### Topology ID Resolution
 
-When `artifact_snapshot.topology_index` is present, Forensics may resolve
-topology IDs from `artifact_snapshot.ranked_targets` (entries with type
+When `artifact_snapshot.structural_context.topology_index` is present, Forensics may resolve
+topology IDs from `artifact_snapshot.structural_context.ranked_targets` (entries with type
 `bridge`, `boundary`, `hotspot`, `entrypoint`) against `topology_index` to
 determine which files to inspect.
 
 This is resolution, not interpretation. Two lookup directions are available:
 
 **Forward lookup (id -> file):** map topology IDs to file paths.
-- `bridge_001` → `{ from, to }` file paths (via `topology_index.bridges`)
-- `boundary_001` → `file` path (via `topology_index.boundaries`)
-- `hotspot_001` → `file` path (via `topology_index.hotspots`)
-- `entrypoint_001` → `file` path (via `topology_index.entrypoints`)
-- `surface_cluster_001` → `members` file paths (via `topology_index.surfaces`)
+- `bridge_001` → `{ from, to }` file paths (via `structural_context.topology_index.bridges`)
+- `boundary_001` → `file` path (via `structural_context.topology_index.boundaries`)
+- `hotspot_001` → `file` path (via `structural_context.topology_index.hotspots`)
+- `entrypoint_001` → `file` path (via `structural_context.topology_index.entrypoints`)
+- `surface_cluster_001` → `members` file paths (via `structural_context.topology_index.surfaces`)
 
 **Reverse lookup (file -> topology facts):** given a file path, query
-`topology_index.node_index[file]` to recover all topology facts for that
+`structural_context.topology_index.node_index[file]` to recover all topology facts for that
 file in one access:
 - `surface_ref` — which surface cluster the file belongs to
 - `is_entrypoint` / `entrypoint_id` — whether the file is an entrypoint
@@ -100,16 +101,41 @@ file in one access:
 Resolved file paths route inspection only. They are not evidence by themselves.
 Evidence for interpretations must still come from runtime-exposed capability payloads.
 
+### Operational Context (Discovery-produced)
+
+When the preceding artifact snapshot has `mode: "discovery"`, Forensics may
+also consume these operational context fields produced by Discovery:
+
+- `artifact_snapshot.operational_context.investigation_scope` — the scope of the current investigation
+  (`scope_type`, `scope_targets`, `scope_confidence`). Use this to focus
+  interpretation on the files the runtime identified as relevant.
+- `artifact_snapshot.operational_context.attention_targets` — the subset of hotspots relevant to
+  the investigation scope. These are pre-filtered — Forensics does not need
+  to re-derive which hotspots matter.
+- `artifact_snapshot.operational_context.blocking_conditions` — factual conditions that impede
+  investigation (e.g. ambiguous path resolution, missing evidence). If
+  blocking conditions are present, Forensics should address them before
+  proposing repair candidates.
+- `artifact_snapshot.operational_context.relevant_surfaces` — surfaces containing the attention
+  targets. Use this to scope investigation to the operational subset.
+- `artifact_snapshot.operational_context.critical_relationships` — bridges connecting the
+  relevant surfaces. These are the structural connections that matter for
+  the current investigation.
+
+These fields are operational context, not evidence. They compress the
+topology into the minimal set Forensics needs. Evidence for interpretations
+must still come from runtime-exposed capability payloads.
+
 The resolved file paths become valid targets for `repair_candidate.id`.
 
 **Critical constraint**: `repair_candidate.id` must be a repository-relative
 file path (`src/index.ts`, not `boundary_001`, `hotspot_001`, or any structural
 cluster identifier). Valid candidate IDs are paths present in:
 
-- `resolved_paths`
-- `ranked_targets[].file` where `type == "explicit_request"`
-- `next_attention_targets`
-- file paths resolved from `topology_index` (bridges → `from`/`to`, boundaries → `file`, hotspots → `file`, entrypoints → `file`, surfaces → `members`)
+- `structural_context.observed_request_alignment.resolved_paths`
+- `structural_context.ranked_targets[].file` where `type == "explicit_request"`
+- `epistemic_state.next_attention_targets`
+- file paths resolved from `structural_context.topology_index` (bridges → `from`/`to`, boundaries → `file`, hotspots → `file`, entrypoints → `file`, surfaces → `members`)
 
 Structural topology identifiers (boundary, hotspot, entrypoint, surface
 cluster IDs) are NOT valid repair candidate IDs and must never appear as `.id`

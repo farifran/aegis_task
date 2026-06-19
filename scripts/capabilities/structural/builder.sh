@@ -183,29 +183,68 @@ ref_graph    = (ref_graph_payload or {}).get('ref_graph', {})
 
 nodes = ref_graph.get('nodes', [])
 if not nodes:
+    # Fallback: derive nodes from import_graph source files only.
+    # Resolved targets that exist as files would also be nodes, but
+    # without ref_graph we cannot verify file existence — so we use
+    # only the source files we know are real.
     node_set = set()
     for entry in import_graph:
         node_set.add(entry['file'])
-        for imp in entry.get('imports', []):
-            node_set.add(imp)
     nodes = sorted(node_set)
 
-adj_out = {n: set() for n in nodes}
-adj_in  = {n: set() for n in nodes}
+# Establish the node set from ref_graph nodes (authoritative) or fallback.
+node_set = set(nodes)
+
+# Two edge layers:
+#   adj_out / adj_in           — ALL observed edges (resolved + unresolved).
+#                                Feeds degree, fanout, hotspot, boundary.
+#   adj_out_resolved / adj_in_resolved — RESOLVED edges only (target is a
+#                                real node). Feeds surfaces, bridges, WCC.
+# Unresolved targets are tracked as edge endpoints for degree but are
+# NEVER added to `nodes` — no synthetic nodes.
+adj_out          = {n: set() for n in nodes}
+adj_in           = {n: set() for n in nodes}
+adj_out_resolved = {n: set() for n in nodes}
+adj_in_resolved  = {n: set() for n in nodes}
+
+# Track unresolved dependency count per source file (for node_index)
+unresolved_dep_count = {}
 
 for entry in import_graph:
     src = entry['file']
     adj_out.setdefault(src, set())
     adj_in.setdefault(src, set())
-    for tgt in entry.get('imports', []):
+    adj_out_resolved.setdefault(src, set())
+    adj_in_resolved.setdefault(src, set())
+    for imp in entry.get('imports', []):
+        if isinstance(imp, dict):
+            tgt = imp['target']
+            is_resolved = imp.get('resolved', True)
+        else:
+            # Legacy string format — assume resolved (backward compat)
+            tgt = imp
+            is_resolved = True
+
+        # All edges feed degree/fanout. The target may not be a node
+        # (unresolved) — that's fine, we record the edge direction
+        # without materializing the target as a graph entity.
         adj_out[src].add(tgt)
         adj_in.setdefault(tgt, set()).add(src)
+
+        if is_resolved and tgt in node_set:
+            adj_out_resolved[src].add(tgt)
+            adj_in_resolved.setdefault(tgt, set()).add(src)
+        elif not is_resolved:
+            unresolved_dep_count[src] = unresolved_dep_count.get(src, 0) + 1
 
 in_degree  = {n: len(adj_in.get(n, set()))  for n in nodes}
 out_degree = {n: len(adj_out.get(n, set())) for n in nodes}
 
+# Undirected adjacency for WCC/bridges uses RESOLVED edges only.
+# Unresolved edges do not form clusters — a pruned target common to
+# many files must NOT merge them into an artificial surface.
 adj_und = {}
-for src, targets in adj_out.items():
+for src, targets in adj_out_resolved.items():
     adj_und.setdefault(src, set())
     for tgt in targets:
         adj_und[src].add(tgt)
@@ -579,6 +618,7 @@ for _n in nodes:
         'in_degree':           in_degree.get(_n, 0),
         'out_degree':          out_degree.get(_n, 0),
         'total_degree':        in_degree.get(_n, 0) + out_degree.get(_n, 0),
+        'unresolved_dependency_count': unresolved_dep_count.get(_n, 0),
         'test_covered':        _n in covered_files,
     }
 
@@ -925,6 +965,16 @@ total_undirected_edges = sum(len(v) for v in adj_und.values()) // 2 if adj_und e
 # but are NOT connected by edges.
 connected_node_count   = sum(s['member_count'] for s in surfaces_out if s.get('surface_kind') == 'cluster')
 
+# Edge counts by resolution status.
+#   resolved_edge_count   — edges where the target is a real node
+#                           (feeds surfaces, bridges, WCC)
+#   unresolved_edge_count — edges observed in source but whose target
+#                           is pruned/missing/out-of-scope. These feed
+#                           degree/fanout/hotspot/boundary but do NOT
+#                           form clusters. No synthetic nodes are created.
+resolved_edge_count   = sum(len(v) for v in adj_out_resolved.values())
+unresolved_edge_count = sum(unresolved_dep_count.values())
+
 # topology_summary — graph-derived topology ONLY.
 # Counts of nodes, edges, and derived structural features.
 # Coverage and payload-health live in `evidence` below so that
@@ -936,6 +986,8 @@ _standalone_surface_count = sum(1 for s in surfaces_out if s.get('surface_kind')
 topology_summary = {
     'total_nodes':             len(nodes),
     'total_edges':             total_undirected_edges,
+    'resolved_edge_count':     resolved_edge_count,
+    'unresolved_edge_count':   unresolved_edge_count,
     'connected_node_count':    connected_node_count,
     'isolated_node_count':     len(nodes) - connected_node_count,
     'cluster_surface_count':   _cluster_surface_count,

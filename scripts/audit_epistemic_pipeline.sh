@@ -93,9 +93,9 @@ main() {
   results+=("$(
     emit_boundary \
       "Discovery -> Forensics" \
-      '["observed_request_alignment","topology_summary","evidence","ranked_targets","gap_counts","unresolved_references","evidence_refs","handover_attention","investigation_scope","blocking_conditions","attention_targets","relevant_surfaces","critical_relationships"]' \
+      '["evidence_refs","handover_attention","summary","observations","findings","investigation_scope","blocking_conditions","attention_targets","relevant_surfaces","critical_relationships"]' \
       '["filesystem.read:epistemic_handover","filesystem.search_symbol","git.status"]' \
-      '["ranked_targets","handover_attention"]' \
+      '["handover_attention","investigation_scope","attention_targets"]' \
       "true" \
       "${status}" \
       "${reason}"
