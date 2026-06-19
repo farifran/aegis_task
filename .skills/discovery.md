@@ -29,28 +29,25 @@ Repair      = mutates facts
 - If it adds meaning, causality, or judgment → Forensics
 
 Discovery exists to:
-- copy runtime-owned fields verbatim (topology, ranking, attention, gaps, provenance,
-  operational compression, summary, findings);
-- emit `observations` — the ONLY field Discovery generates, neutral factual statements
-  derived from topology data;
+- copy runtime-owned fields verbatim (investigation_scope, attention_targets, blocking_conditions) from `runtime.attention_seed`;
+- emit cognitive fields under `operational_context` (required_evidence, operational_observations, rationale, escalation_reason, recommended_next_actions);
 - declare `evidence_refs` — the runtime capabilities that produced the evidence consumed.
 
-Discovery's cognitive responsibility is minimal: generate `observations` only.
-Everything else is copied verbatim from runtime capabilities.
+Discovery must produce ONLY:
+- investigative focus (foco investigativo)
+- gaps (lacunas)
+- hypotheses (hipóteses)
+- prioritization (priorização)
+- next steps (próximos passos)
+- operational interpretation (interpretação operacional)
 
-Discovery is not:
-- an inferrer of structure;
-- an interpreter of topology meaning;
-- a selector of attention targets;
-- a generator of attention routing;
-- a judge of architectural relevance.
+Discovery must explain *why* the structural facts matter operationally (what they mean for the investigation), rather than repeating the facts themselves.
 
 Discovery does not:
-- apply adjectives to topology elements (highly connected, critical, important, central);
-- decide which surface or target matters;
-- copy file names or paths into its output;
-- describe why a gap is significant;
+- repeat metrics, counts, or structural facts already present in the mechanically-produced `structural_context` (e.g. node counts, edge counts, bridge counts);
+- copy file names or paths into its output, except when referencing them in a qualitative context;
 - calculate gap counts or derive topology structure.
+
 
 ---
 
@@ -74,30 +71,42 @@ The `runtime.attention_seed` payload is the source for attention routing and ope
 ### Runtime-injected structural fields (NOT in Discovery output)
 
 The following fields are produced by `structural.builder` and injected into
-`artifact_snapshot` by the runtime during `promote_epistemic_handover`.
-Discovery does NOT emit these fields. The runtime reads them from the
-builder payload and writes them to the handover directly.
+`artifact_snapshot.structural_context` by the runtime during
+`promote_epistemic_handover`. Discovery does NOT emit these fields. The
+runtime reads them from the builder payload and writes them to the handover
+directly, under the `structural_context` key.
 
-- `topology_summary` — runtime-injected
-- `topology_index` — runtime-injected
-- `ranked_targets` — runtime-injected
-- `observed_request_alignment` — runtime-injected
-- `gap_counts` — runtime-injected
-- `evidence` — runtime-injected
-- `unresolved_references` — runtime-injected
+- `topology_summary` — runtime-injected into `structural_context`
+- `topology_index` — runtime-injected into `structural_context`
+- `ranked_targets` — runtime-injected into `structural_context`
+- `observed_request_alignment` — runtime-injected into `structural_context`
+- `gap_counts` — runtime-injected into `structural_context`
+- `evidence` — runtime-injected into `structural_context`
+- `unresolved_references` — runtime-injected into `structural_context`
 
-### Discovery output fields (copied from runtime capabilities)
+Fields Discovery emits go into `artifact_snapshot.operational_context`.
+The runtime splits the handover into:
+- `structural_context` — runtime-owned, from builder (Discovery cannot corrupt)
+- `operational_context` — Discovery-owned, from the mode artifact
 
-| Field | Source capability | What it is |
+### Discovery output fields (operational interpretation)
+
+All fields generated or copied by Discovery are placed under the `operational_context` key, with the exception of protocol/metadata fields (`mode`, `evidence_refs`, `handover_attention`).
+
+| Field | Source capability/Cognitive | What it is |
 |---|---|---|
-| `runtime_summary` | `structural.builder` | Deterministic one-line topology summary. Copy directly into output as `summary`. |
-| `runtime_findings` | `structural.builder` | Deterministic structural findings. Copy directly into output as `findings`. |
-| `handover_attention` | `runtime.attention_seed` | Deterministic attention seed. Copy directly into output. |
 | `investigation_scope` | `runtime.attention_seed` | Operational scope. Copy directly into output. |
-| `blocking_conditions` | `runtime.attention_seed` | Factual conditions impeding investigation. Copy directly into output. |
 | `attention_targets` | `runtime.attention_seed` | Hotspots in scope. Copy directly into output. |
-| `relevant_surfaces` | `runtime.attention_seed` | Surfaces containing targets. Copy directly into output. |
-| `critical_relationships` | `runtime.attention_seed` | Bridges connecting relevant surfaces. Copy directly into output. |
+| `blocking_conditions` | `runtime.attention_seed` | Factual conditions impeding investigation. Copy directly into output. |
+| `required_evidence` | Cognitive | List of capabilities or resources that need to be collected/consulted to address the investigation input. |
+| `operational_observations` | Cognitive | Neutral, qualitative, interpretive observations explaining the meaning of the topology. Discovery MUST NOT repeat metrics or counts (e.g. node counts, edge counts, bridge counts) already present in structural_context. |
+| `rationale` | Cognitive | Explains the reasoning behind the investigation priority and why certain attention targets were selected. |
+| `escalation_reason` | Cognitive | Null, or a string explaining why the investigation is blocked or requires escalation. |
+| `recommended_next_actions` | Cognitive | Specific, actionable recommended next steps (e.g. invoke forensics on target X). |
+| `investigation_hypotheses` | Cognitive | List of qualitative hypotheses about the repository structure and potential dependency behaviors. |
+| `investigation_risks` | Cognitive | List of qualitative risks in the current topology/scope (e.g., dead code, hidden entrypoints). |
+| `evidence_priorities` | Cognitive | List of specific capabilities and targets to prioritize for collection. |
+| `confidence_drivers` | Cognitive | List of factors driving structural or operational confidence (e.g., "Bridge observed mechanically"). |
 
 ### Provenance declaration
 
@@ -131,7 +140,7 @@ Lower-priority evidence must not override higher-priority evidence.
 
 ### Structural fields — NOT emitted by Discovery
 
-The following fields are runtime-injected into `artifact_snapshot` by
+The following fields are runtime-injected into `artifact_snapshot.structural_context` by
 `promote_epistemic_handover` from the `structural.builder` payload.
 Discovery does NOT emit them in its output:
 - `topology_summary`
@@ -142,9 +151,7 @@ Discovery does NOT emit them in its output:
 - `evidence`
 - `unresolved_references`
 
-If the LLM accidentally emits any of these, the runtime strips them and
-replaces with the builder-produced versions. The LLM cannot corrupt
-structural data.
+If the LLM accidentally emits any of these, the runtime strips them. The LLM cannot corrupt structural data.
 
 ### evidence_refs
 
@@ -201,43 +208,45 @@ No explanations.
     "attention_reason": "observed_request_alignment direct match"
   },
 
-  "summary": "81 nodes, 12 edges, 5 cluster surfaces, 65 standalone surfaces. 17 connected, 65 isolated.",
-
-  "observations": [
-    "surface_cluster_001 has 8 members and 7 bridges",
-    "65 of 82 nodes have no observed relationships (relation_visibility: none_observed)",
-    "22 unresolved references detected"
-  ],
-
-  "findings": [
-    {
-      "finding": "65 of 82 nodes are isolated (79%)",
-      "topology_refs": ["isolated_node_count: 65"]
-    }
-  ],
-
-  "investigation_scope": {
-    "scope_type": "explicit_request",
-    "scope_targets": ["src/index.ts"],
-    "scope_confidence": "high"
-  },
-
-  "blocking_conditions": [
-    "requested path resolves to multiple candidates"
-  ],
-
-  "attention_targets": [
-    "runtime_aegis.sh",
-    "scripts/execute_mode.sh"
-  ],
-
-  "relevant_surfaces": [
-    "surface_cluster_001"
-  ],
-
-  "critical_relationships": [
-    {"type": "bridge", "id": "bridge_001", "from": "runtime_aegis.sh", "to": "scripts/execute_mode.sh"}
-  ]
+  "operational_context": {
+    "investigation_scope": {
+      "scope_type": "explicit_request",
+      "scope_targets": ["src/index.ts"],
+      "scope_confidence": "high"
+    },
+    "attention_targets": [
+      "src/index.ts"
+    ],
+    "blocking_conditions": [],
+    "required_evidence": [
+      "filesystem.read:src/index.ts"
+    ],
+    "operational_observations": [
+      "Single bridge dominates observed connectivity.",
+      "Boundary concentration suggests dependency centralization.",
+      "Relationship coverage is limited to one dependency chain."
+    ],
+    "rationale": [
+      "User requested an analysis of the repository topology, starting with the main entrypoint."
+    ],
+    "escalation_reason": null,
+    "recommended_next_actions": [
+      "Invoke forensics mode on src/index.ts"
+    ],
+    "investigation_hypotheses": [
+      "Dependency behavior is concentrated in a single controller-model chain."
+    ],
+    "investigation_risks": [
+      "Isolated surfaces might contain hidden entrypoints or dead code."
+    ],
+    "evidence_priorities": [
+      "filesystem.read:src/index.ts"
+    ],
+    "confidence_drivers": [
+      "Bridge observed mechanically",
+      "Boundary observed mechanically"
+    ]
+  }
 }
 ```
 
@@ -246,81 +255,39 @@ No explanations.
 ## OPERATIONAL COMPRESSION — runtime-owned, copied verbatim
 
 The following fields are produced deterministically by `runtime.attention_seed`.
-Discovery copies them verbatim into the output. Discovery does NOT generate,
+Discovery copies them verbatim into `operational_context`. Discovery does NOT generate,
 derive, filter, or alter any of them.
 
 ### investigation_scope
 
-Copy `investigation_scope` from the `runtime.attention_seed` payload verbatim.
+Copy `investigation_scope` from the `runtime.attention_seed` payload verbatim into `operational_context.investigation_scope`.
 Contains `scope_type`, `scope_targets`, `scope_confidence`.
 
 If absent, set to `{"scope_type": "none", "scope_targets": [], "scope_confidence": "none"}`.
 
 ### blocking_conditions
 
-Copy `blocking_conditions` from the `runtime.attention_seed` payload verbatim.
+Copy `blocking_conditions` from the `runtime.attention_seed` payload verbatim into `operational_context.blocking_conditions`.
 Array of strings describing factual conditions that impede investigation.
 
 If absent, set to `[]`.
 
 ### attention_targets
 
-Copy `attention_targets` from the `runtime.attention_seed` payload verbatim.
+Copy `attention_targets` from the `runtime.attention_seed` payload verbatim into `operational_context.attention_targets`.
 Subset of hotspots relevant to the current investigation scope.
 
 If absent, set to `[]`.
-
-### relevant_surfaces
-
-Copy `relevant_surfaces` from the `runtime.attention_seed` payload verbatim.
-Surfaces containing attention or scope targets.
-
-If absent, set to `[]`.
-
-### critical_relationships
-
-Copy `critical_relationships` from the `runtime.attention_seed` payload verbatim.
-Bridges connecting relevant surfaces.
-
-If absent, set to `[]`.
-
-### summary
-
-Copy `runtime_summary` from the `structural.builder` payload verbatim into `summary`.
-Do not edit, rewrite, or supplement.
-
-If `runtime_summary` is absent, omit the `summary` field.
-
-### findings
-
-Copy `runtime_findings` from the `structural.builder` payload verbatim into `findings`.
-Do not edit, filter, or add findings.
-
-If `runtime_findings` is absent, set `findings` to `[]`.
-
-### observations
-
-The ONLY field Discovery generates from its own reading of the topology.
-Short factual statements referencing specific topology IDs or counts.
-No inference. No causality. No hypotheses.
-
-Examples:
-- `"surface_cluster_001 has 8 members and 7 bridges"`
-- `"64 of 81 nodes have no observed relationships (relation_visibility: none_observed)"`
-- `"requested path resolved ambiguously to 3 candidates"`
-- `"22 unresolved references detected"`
 
 ### What Discovery does NOT do
 
 - Does NOT generate `investigation_scope` — copies from runtime
 - Does NOT generate `blocking_conditions` — copies from runtime
 - Does NOT generate `attention_targets` — copies from runtime
-- Does NOT generate `relevant_surfaces` — copies from runtime
-- Does NOT generate `critical_relationships` — copies from runtime
 - Does NOT generate `summary` — copies from runtime
 - Does NOT generate `findings` — copies from runtime
-- Does NOT emit `interpretations` — belongs to Forensics
-- Does NOT emit `hypotheses` — belongs to Forensics
+- Does NOT emit detailed defect root-cause interpretations — belongs to Forensics
+- Does NOT emit detailed defect root-cause hypotheses — belongs to Forensics (Discovery only emits top-level structural investigation hypotheses)
 
 ---
 
@@ -333,13 +300,18 @@ If `structural.builder` payload is unavailable or failed:
   payload is missing, the runtime will omit them from `artifact_snapshot`,
   and downstream mode preconditions will fail with a clear error.
 - Set `evidence_refs` to the capabilities actually read.
-- Set `investigation_scope` to `{"scope_type": "none", "scope_targets": [], "scope_confidence": "none"}`.
-- Set `blocking_conditions` to `["required evidence payload missing"]`.
-- Set `attention_targets` to `[]`.
-- Set `relevant_surfaces` to `[]`.
-- Set `critical_relationships` to `[]`.
-- Set `findings` to `[]`.
-- Omit `summary` if `runtime_summary` is absent.
+- Set `operational_context.investigation_scope` to `{"scope_type": "none", "scope_targets": [], "scope_confidence": "none"}`.
+- Set `operational_context.blocking_conditions` to `["required evidence payload missing"]`.
+- Set `operational_context.attention_targets` to `[]`.
+- Set `operational_context.operational_observations` to `[]`.
+- Set `operational_context.required_evidence` to `[]`.
+- Set `operational_context.rationale` to `[]`.
+- Set `operational_context.escalation_reason` to `"required evidence payload missing"`.
+- Set `operational_context.recommended_next_actions` to `[]`.
+- Set `operational_context.investigation_hypotheses` to `[]`.
+- Set `operational_context.investigation_risks` to `[]`.
+- Set `operational_context.evidence_priorities` to `[]`.
+- Set `operational_context.confidence_drivers` to `[]`.
 
 Do not infer topology.
 Do not describe why topology is absent.
@@ -351,16 +323,16 @@ Do not emit structural fields — they are runtime-owned.
 
 The following patterns are prohibited in any Discovery output:
 
-| Prohibited | Permitted |
+| Prohibited Pattern | Permitted/Expected Qualitative Pattern |
 |---|---|
-| `"This surface is highly connected"` (as adjective on runtime data) | Neutral observation: `"surface_cluster_001 has 8 members and 7 bridges"` |
+| Quantities, counts, or metrics already present in structural_context (e.g. `"Topology contains 3 nodes and 1 edge"`, `"1 bridge exists"`, `"surface_cluster_001 has 8 members"`) | Qualitative/interpretive observations explaining the meaning of the topology (e.g. `"Single bridge dominates observed connectivity."`, `"Boundary concentration suggests dependency centralization."`) |
+| `"This surface is highly connected"` (as adjective on raw runtime data) | Neutral observation: `"Boundary concentration suggests dependency centralization."` |
 | File paths invented by the model | Runtime-observed paths in `observed_request_alignment` or `explicit_request` entries |
 | `"attention_reason": "dense cluster"` (custom attention) | Runtime-produced `attention_reason` copied verbatim from `runtime.attention_seed` |
 | Invented topology ids | Builder-assigned ids only |
 | Renamed topology elements | Original builder ids only |
 | Altering runtime-owned fields based on observation | Observational fields are separate from runtime-owned fields |
-| Recommendations or action items | Observations only — action belongs to Forensics/Repair |
-| Interpretations or hypotheses | Discovery does NOT interpret. Interpretation belongs to Forensics. |
+| Repeating raw counts or structural facts verbatim in rationale/observations | Explaining *why* those facts matter to the investigation, highlighting gaps, hypotheses, prioritization, and next steps |
 
 File paths are permitted **only** in:
 - `observed_request_alignment.requested_paths`
@@ -375,15 +347,16 @@ File paths are permitted **only** in:
 Discovery reads runtime-owned topology data.
 Discovery copies runtime-owned topology data verbatim.
 Discovery does not select, prioritize, or route attention — that is runtime-owned.
-Discovery observes and reports what the topology shows.
+Discovery observes and reports what the topology shows qualitatively.
 
 Structure, selection, counts, and attention routing are computed by runtime capabilities
 (`structural.builder`, `runtime.attention_seed`).
 Discovery reads and copies them.
 
-Interpretive description of topology belongs to Discovery.
-Hypothesis construction and investigation prioritization belong to Forensics.
+Operational interpretation of topology, investigative focus, gaps, hypotheses, prioritization, and next steps belong to Discovery.
+Detailed root-cause analysis, defect causality, and structural repair proposal belong to Forensics.
 Correction belongs to Repair.
 Simplification belongs to Optimize.
 Challenge belongs to Adversarial.
 Final verdict belongs to Validation.
+

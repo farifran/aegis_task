@@ -18,9 +18,9 @@ candidate_fatal() {
 
 jq -e '
   .artifact_snapshot.mode == "repair"
-  and (.artifact_snapshot.diff | type == "string" and length > 0)
+  and (.artifact_snapshot.operational_context.diff | type == "string" and length > 0)
   and (
-    .artifact_snapshot.files_changed
+    .artifact_snapshot.operational_context.files_changed
     | type == "array"
     and length > 0
     and all(
@@ -44,8 +44,8 @@ cleanup() {
 
 trap cleanup EXIT
 
-jq -r '.artifact_snapshot.diff' "${HANDOVER_FILE}" > "${diff_file}"
-jq -r '.artifact_snapshot.files_changed[]' "${HANDOVER_FILE}" \
+jq -r '.artifact_snapshot.operational_context.diff' "${HANDOVER_FILE}" > "${diff_file}"
+jq -r '.artifact_snapshot.operational_context.files_changed[]' "${HANDOVER_FILE}" \
   | sort -u > "${expected_files}"
 
 git -C "${EXECUTION_SURFACE}" apply --check "${diff_file}" \

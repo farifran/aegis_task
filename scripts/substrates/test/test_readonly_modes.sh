@@ -33,13 +33,8 @@ assert_manifest_contract() {
     and (.modes.discovery.evidence_capabilities == [
       "filesystem.list_tree",
       "filesystem.read",
-      "filesystem.extract_import_graph",
-      "filesystem.extract_reference_graph",
-      "filesystem.extract_symbols",
-      "filesystem.extract_entrypoints",
-      "filesystem.extract_test_relationships",
-      "filesystem.extract_configuration_structure",
-      "structural.builder"
+      "structural.builder",
+      "runtime.attention_seed"
     ])
     and (.modes.forensics.evidence_capabilities == ["filesystem.search_symbol", "git.status", "filesystem.read"])
     and (.modes.validation.evidence_capabilities == ["filesystem.read"])
@@ -89,12 +84,43 @@ class Handler(http.server.BaseHTTPRequestHandler):
         for message in request.get("messages", []):
             payload_names.extend(PAYLOAD_PATTERN.findall(message.get("content", "")))
 
-        artifact = {
-            "mode": mode,
-            "status": "ok",
-            "summary": f"mock {mode} artifact",
-            "observed_payloads": payload_names,
-        }
+        if mode == "discovery":
+            artifact = {
+                "mode": mode,
+                "operational_context": {
+                    "status": "ok",
+                    "summary": f"mock {mode} artifact",
+                    "observed_payloads": payload_names,
+                    "investigation_scope": {
+                        "scope_type": "exploratory",
+                        "scope_targets": [],
+                        "scope_confidence": "high"
+                    },
+                    "attention_targets": [],
+                    "blocking_conditions": [],
+                    "required_evidence": [],
+                    "operational_observations": [],
+                    "rationale": [],
+                    "escalation_reason": None,
+                    "recommended_next_actions": [],
+                    "investigation_hypotheses": [],
+                    "investigation_risks": [],
+                    "evidence_priorities": [],
+                    "confidence_drivers": []
+                },
+                "handover_attention": {
+                    "next_attention_targets": [],
+                    "attention_scope": "none",
+                    "attention_reason": "no active attention"
+                }
+            }
+        else:
+            artifact = {
+                "mode": mode,
+                "status": "ok",
+                "summary": f"mock {mode} artifact",
+                "observed_payloads": payload_names,
+            }
 
         if mode == "forensics":
             artifact.update({
@@ -335,9 +361,11 @@ seed_required_predecessor() {
         {
           artifact_snapshot: {
             mode: "optimize",
-            diff: "diff --git a/src/index.ts b/src/index.ts",
-            files_changed: ["src/index.ts"],
-            investigation_input: $investigation_input
+            investigation_input: $investigation_input,
+            operational_context: {
+              diff: "diff --git a/src/index.ts b/src/index.ts",
+              files_changed: ["src/index.ts"]
+            }
           },
           epistemic_state: {
             next_attention_targets: ["src/index.ts"],
@@ -353,14 +381,16 @@ seed_required_predecessor() {
         {
           artifact_snapshot: {
             mode: "adversarial",
-            candidate_result: {
-              source_mode: "optimize",
-              diff: "diff --git a/src/index.ts b/src/index.ts",
-              files_changed: ["src/index.ts"]
-            },
-            adversarial_findings: [],
-            evidence_refs: ["filesystem.read:epistemic_handover"],
-            investigation_input: $investigation_input
+            investigation_input: $investigation_input,
+            operational_context: {
+              candidate_result: {
+                source_mode: "optimize",
+                diff: "diff --git a/src/index.ts b/src/index.ts",
+                files_changed: ["src/index.ts"]
+              },
+              adversarial_findings: [],
+              evidence_refs: ["filesystem.read:epistemic_handover"]
+            }
           },
           epistemic_state: {
             next_attention_targets: [],
@@ -440,8 +470,13 @@ assert_mode_output() {
     --argjson expected_payloads "${expected_payloads_json}" \
     '
       .mode == $mode
-      and (.status == "ok" or .status == "inconclusive" or .status == "challenged")
-      and (.observed_payloads == $expected_payloads)
+      and (
+        if $mode == "discovery" then
+          (.operational_context.status == "ok" and .operational_context.observed_payloads == $expected_payloads)
+        else
+          ((.status == "ok" or .status == "inconclusive" or .status == "challenged") and .observed_payloads == $expected_payloads)
+        end
+      )
     ' >/dev/null; then
     echo "EXPECTED payloads: ${expected_payloads_json}" >&2
     echo "ACTUAL artifact: ${artifact}" >&2
@@ -481,14 +516,14 @@ main() {
   assert_discovery_accepts_informal_cli_investigation_input
   assert_discovery_accepts_issue_cli_investigation_input
 
-  assert_mode_output "discovery" '["filesystem_list_tree.json", "filesystem_read_epistemic_handover.json", "filesystem_extract_import_graph.json", "filesystem_extract_reference_graph.json", "filesystem_extract_symbols.json", "filesystem_extract_entrypoints.json", "filesystem_extract_test_relationships.json", "filesystem_extract_configuration_structure.json", "structural_builder.json"]'
+  assert_mode_output "discovery" '["filesystem_list_tree.json", "filesystem_read_epistemic_handover.json", "structural_builder.json", "runtime_attention_seed.json"]'
   assert_mode_output "forensics" '["filesystem_search_symbol.json", "git_status.json", "filesystem_read_epistemic_handover.json"]'
   assert_mode_output "validation" '["filesystem_read_epistemic_handover.json"]'
   assert_mode_output "adversarial" '["filesystem_search_symbol.json", "filesystem_read_epistemic_handover.json"]'
 
   assert_materialized_runtime_state \
     "discovery" \
-    '["filesystem_extract_configuration_structure.json", "filesystem_extract_entrypoints.json", "filesystem_extract_import_graph.json", "filesystem_extract_reference_graph.json", "filesystem_extract_symbols.json", "filesystem_extract_test_relationships.json", "filesystem_list_tree.json", "filesystem_read_epistemic_handover.json", "structural_builder.json"]'
+    '["filesystem_extract_configuration_structure.json", "filesystem_extract_entrypoints.json", "filesystem_extract_import_graph.json", "filesystem_extract_reference_graph.json", "filesystem_extract_symbols.json", "filesystem_extract_test_relationships.json", "filesystem_list_tree.json", "filesystem_read_epistemic_handover.json", "runtime_attention_seed.json", "structural_builder.json"]'
 
   assert_materialized_runtime_state \
     "forensics" \

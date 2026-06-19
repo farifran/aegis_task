@@ -140,7 +140,7 @@ resolve_mutation_targets() {
       local repair_candidate_ids
       repair_candidate_ids="$(
         jq -r '
-          .artifact_snapshot.repair_candidates[]?.id // empty
+          .artifact_snapshot.operational_context.repair_candidates[]?.id // empty
         ' "${AEGIS_EPISTEMIC_HANDOVER_FILE}" 2>/dev/null || true
       )"
 
@@ -156,7 +156,7 @@ resolve_mutation_targets() {
       local repaired_files
       repaired_files="$(
         jq -r '
-          .artifact_snapshot.files_changed[]? // empty
+          .artifact_snapshot.operational_context.files_changed[]? // empty
         ' "${AEGIS_EPISTEMIC_HANDOVER_FILE}" 2>/dev/null || true
       )"
 
@@ -186,13 +186,13 @@ resolve_mutation_targets() {
     done <<< "${resolved_paths}"
   fi
 
-  # Source 3: epistemic handover → artifact_snapshot.observed_request_alignment
-  # (The discovery artifact is stored here in full; resolved_paths survives cleanup)
+  # Source 3: epistemic handover → artifact_snapshot.structural_context.observed_request_alignment
+  # (The discovery artifact's structural context is stored here; resolved_paths survives cleanup)
   if [[ "${#targets[@]}" -eq 0 ]] && [[ -f "${AEGIS_EPISTEMIC_HANDOVER_FILE}" ]]; then
     local snapshot_paths
     snapshot_paths="$(
       jq -r '
-        .artifact_snapshot.observed_request_alignment.resolved_paths[]? // empty
+        .artifact_snapshot.structural_context.observed_request_alignment.resolved_paths[]? // empty
       ' "${AEGIS_EPISTEMIC_HANDOVER_FILE}" 2>/dev/null || true
     )"
     while IFS= read -r path; do
@@ -201,12 +201,12 @@ resolve_mutation_targets() {
     done <<< "${snapshot_paths}"
   fi
 
-  # Source 4: epistemic handover → artifact_snapshot.ranked_targets (explicit_request)
+  # Source 4: epistemic handover → artifact_snapshot.structural_context.ranked_targets (explicit_request)
   if [[ "${#targets[@]}" -eq 0 ]] && [[ -f "${AEGIS_EPISTEMIC_HANDOVER_FILE}" ]]; then
     local ranked_files
     ranked_files="$(
       jq -r '
-        .artifact_snapshot.ranked_targets[]?
+        .artifact_snapshot.structural_context.ranked_targets[]?
         | select(.type == "explicit_request")
         | .file // empty
       ' "${AEGIS_EPISTEMIC_HANDOVER_FILE}" 2>/dev/null || true

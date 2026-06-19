@@ -35,7 +35,11 @@ readonly TARGET_FILE="${1:-}"
 # LIMITS
 # =========================================================
 
-readonly MAX_READ_BYTES="${AEGIS_FILE_CONTENT_MAX_BYTES:-50000}"
+max_read_bytes="${AEGIS_FILE_CONTENT_MAX_BYTES:-50000}"
+if [[ "$(basename "${TARGET_FILE}")" == "epistemic_handover.json" ]]; then
+  max_read_bytes="${AEGIS_EPISTEMIC_HANDOVER_MAX_BYTES:-100000}"
+fi
+readonly MAX_READ_BYTES="${max_read_bytes}"
 
 # =========================================================
 # VALIDATION

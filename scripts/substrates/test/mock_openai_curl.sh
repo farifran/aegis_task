@@ -55,9 +55,27 @@ case "${mode}" in
         --argjson observed_payloads "${payload_names_json}" \
         '{
           mode: $mode,
-          status: "ok",
-          summary: "mock discovery artifact",
-          observed_payloads: $observed_payloads,
+          operational_context: {
+            status: "ok",
+            summary: "mock discovery artifact",
+            observed_payloads: $observed_payloads,
+            investigation_scope: {
+              scope_type: "exploratory",
+              scope_targets: [],
+              scope_confidence: "high"
+            },
+            attention_targets: [],
+            blocking_conditions: [],
+            required_evidence: [],
+            operational_observations: [],
+            rationale: [],
+            escalation_reason: null,
+            recommended_next_actions: [],
+            investigation_hypotheses: [],
+            investigation_risks: [],
+            evidence_priorities: [],
+            confidence_drivers: []
+          },
           handover_attention: {
             next_attention_targets: [
               "filesystem.read:epistemic_handover",

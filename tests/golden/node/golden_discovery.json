@@ -1,192 +1,269 @@
 {
-  "mode": "discovery",
-  "observed_payloads": [],
-  "observed_files": [
-    "src/index.ts",
-    "src/db.ts",
-    "package.json",
-    "tsconfig.json"
-  ],
-  "observed_entities": [],
-  "observed_capabilities": [],
-  "observations": {
-    "observed_surfaces": [
-      {
-        "surface_id": "surface_cluster_001",
-        "members": [
-          "src/index.ts",
-          "src/db.ts"
+  "artifact_snapshot": {
+    "mode": "discovery",
+    "investigation_input": "analyze repository topology",
+    "generated_at": "2026-06-19T10:26:39Z",
+    "structural_context": {
+      "topology_index": {
+        "surfaces": [
+          {
+            "id": "surface_cluster_001",
+            "surface_kind": "cluster",
+            "member_count": 2,
+            "members": [
+              "input/src/db.ts",
+              "input/src/index.ts"
+            ],
+            "dominant_node": "input/src/db.ts",
+            "bridge_count": 1,
+            "boundary_count": 1,
+            "hotspot_count": 0,
+            "entrypoint_count": 1
+          },
+          {
+            "id": "surface_standalone_summary",
+            "surface_kind": "standalone",
+            "member_count": 3,
+            "members": [],
+            "dominant_node": null,
+            "bridge_count": 0,
+            "boundary_count": 0,
+            "hotspot_count": 0,
+            "entrypoint_count": 0
+          }
         ],
-        "evidence_signature": [
-          "SHARED_DIRECTORY"
+        "bridges": [
+          {
+            "id": "bridge_001",
+            "from": "input/src/db.ts",
+            "to": "input/src/index.ts",
+            "surface_ref": "surface_cluster_001"
+          }
         ],
-        "surface_role": "cluster",
-        "formation_signals": [
-          "DIRECTORY_CONVERGENCE",
-          "IMPORT_MATCH"
+        "boundaries": [
+          {
+            "id": "boundary_001",
+            "file": "input/src/db.ts",
+            "in_degree": 1,
+            "out_degree": 0,
+            "surface_ref": "surface_cluster_001"
+          }
         ],
-        "confidence": "high",
-        "evidence_basis": {
-          "directory_convergence": true,
-          "co_occurrence": false,
-          "runtime_exposure": false
+        "hotspots": [],
+        "entrypoints": [
+          {
+            "id": "entrypoint_001",
+            "file": "input/src/index.ts",
+            "surface_ref": "surface_cluster_001"
+          }
+        ],
+        "node_index": {
+          "input/package.json": {
+            "surface_ref": "surface_standalone_001",
+            "surface_kind": "standalone",
+            "relation_visibility": "none_observed",
+            "is_entrypoint": false,
+            "is_hotspot": false,
+            "is_boundary": false,
+            "in_degree": 0,
+            "out_degree": 0,
+            "total_degree": 0,
+            "unresolved_dependency_count": 0,
+            "test_covered": false
+          },
+          "input/src/db.ts": {
+            "surface_ref": "surface_cluster_001",
+            "surface_kind": "cluster",
+            "relation_visibility": "has_observed_relationships",
+            "is_entrypoint": false,
+            "is_hotspot": false,
+            "is_boundary": true,
+            "in_degree": 1,
+            "out_degree": 0,
+            "total_degree": 1,
+            "unresolved_dependency_count": 0,
+            "test_covered": false,
+            "boundary_id": "boundary_001"
+          },
+          "input/src/index.ts": {
+            "surface_ref": "surface_cluster_001",
+            "surface_kind": "cluster",
+            "relation_visibility": "has_observed_relationships",
+            "is_entrypoint": true,
+            "is_hotspot": false,
+            "is_boundary": false,
+            "in_degree": 0,
+            "out_degree": 1,
+            "total_degree": 1,
+            "unresolved_dependency_count": 0,
+            "test_covered": false,
+            "entrypoint_id": "entrypoint_001",
+            "surface_status": "surface_member"
+          },
+          "input/target_system_profile.yml": {
+            "surface_ref": "surface_standalone_002",
+            "surface_kind": "standalone",
+            "relation_visibility": "none_observed",
+            "is_entrypoint": false,
+            "is_hotspot": false,
+            "is_boundary": false,
+            "in_degree": 0,
+            "out_degree": 0,
+            "total_degree": 0,
+            "unresolved_dependency_count": 0,
+            "test_covered": false
+          },
+          "input/tsconfig.json": {
+            "surface_ref": "surface_standalone_003",
+            "surface_kind": "standalone",
+            "relation_visibility": "none_observed",
+            "is_entrypoint": false,
+            "is_hotspot": false,
+            "is_boundary": false,
+            "in_degree": 0,
+            "out_degree": 0,
+            "total_degree": 0,
+            "unresolved_dependency_count": 0,
+            "test_covered": false
+          }
         }
       },
-      {
-        "surface_id": "surface_cluster_002",
-        "members": [
-          "package.json",
-          "tsconfig.json"
-        ],
-        "evidence_signature": [
-          "SHARED_DIRECTORY"
-        ],
-        "surface_role": "cluster",
-        "formation_signals": [
-          "DIRECTORY_CONVERGENCE"
-        ],
-        "confidence": "high",
-        "evidence_basis": {
-          "directory_convergence": true,
-          "co_occurrence": false,
-          "runtime_exposure": false
-        }
-      }
-    ],
-    "observed_boundaries": [
-      {
-        "boundary_id": "boundary_cluster_001",
-        "boundary_path": ".",
-        "members": [
-          "package.json"
-        ],
-        "separates": [
-          "surface_cluster_001",
-          "surface_cluster_002"
-        ],
-        "cross_boundary_edges": 0,
-        "confidence": "high",
-        "evidence_basis": {
-          "shared_context": true,
-          "dependency_isolation": false,
-          "namespace_separation": false
-        }
-      }
-    ],
-    "observed_absences": [
-      {
-        "absence_id": "expected_lockfile_absent",
-        "absence_class": "missing_file",
-        "evidence": [
-          "package-lock.json not found"
-        ],
-        "expected_property": null,
-        "observed_property": null,
-        "affected_surfaces": [
-          "surface_cluster_002"
-        ],
-        "confidence": "high",
-        "evidence_basis": {
-          "presence_absence": true,
-          "declaration_divergence": false
-        }
-      }
-    ],
-    "observed_relationships": {
-      "imports": [
+      "topology_summary": {
+        "total_nodes": 5,
+        "total_edges": 1,
+        "resolved_edge_count": 1,
+        "unresolved_edge_count": 0,
+        "connected_node_count": 2,
+        "isolated_node_count": 3,
+        "cluster_surface_count": 1,
+        "standalone_surface_count": 1,
+        "total_surface_count": 2,
+        "boundary_count": 1,
+        "bridge_count": 1,
+        "bridge_emit_count": 1,
+        "bridge_truncated": false,
+        "hotspot_count": 0,
+        "entrypoint_count": 1
+      },
+      "ranked_targets": [
         {
-          "file": "src/index.ts",
-          "imports": [
-            "src/db.ts"
-          ]
+          "id": "bridge_001",
+          "type": "bridge",
+          "surface_ref": "surface_cluster_001",
+          "score": 4,
+          "ranking_reason": "bridge_weight(4)",
+          "reason": "highest_bridge_count_surface:bridge"
+        },
+        {
+          "id": "boundary_001",
+          "type": "boundary",
+          "surface_ref": "surface_cluster_001",
+          "score": 3,
+          "ranking_reason": "boundary_weight(2)+in_degree(1)",
+          "reason": "highest_bridge_count_surface:boundary"
+        },
+        {
+          "id": "entrypoint_001",
+          "type": "entrypoint",
+          "surface_ref": "surface_cluster_001",
+          "score": 1,
+          "ranking_reason": "entrypoint_weight(1)",
+          "reason": "highest_bridge_count_surface:entrypoint"
         }
       ],
-      "test_relationships": [],
+      "bridge_data": [
+        {
+          "id": "bridge_001",
+          "from": "input/src/db.ts",
+          "to": "input/src/index.ts",
+          "surface_ref": "surface_cluster_001"
+        }
+      ],
+      "boundary_data": [
+        {
+          "id": "boundary_001",
+          "file": "input/src/db.ts",
+          "in_degree": 1,
+          "out_degree": 0,
+          "surface_ref": "surface_cluster_001"
+        }
+      ],
+      "hotspot_data": [],
       "entrypoints": [
         {
-          "entrypoint": "src/index.ts",
-          "type": "node_script"
+          "id": "entrypoint_001",
+          "file": "input/src/index.ts",
+          "surface_ref": "surface_cluster_001"
         }
       ],
-      "configuration_structures": [
-        {
-          "file": "package.json",
-          "keys": [
-            "dependencies"
-          ]
+      "evidence_summary": {
+        "coverage": {
+          "test_covered_file_count": 0,
+          "config_file_count": 3,
+          "uncovered_hotspot_count": 0
+        },
+        "payload_status": {
+          "consumed_payload_ok_count": 6,
+          "consumed_payload_missing_count": 0,
+          "consumed_payload_failed_count": 0
         }
+      },
+      "unresolved_references": [],
+      "observed_request_alignment": {
+        "requested_paths": [],
+        "resolved_paths": [],
+        "path_resolutions": [],
+        "resolution_confidence": "none"
+      },
+      "gap_counts": {
+        "visibility_gap_count": 0,
+        "coverage_gap_count": 0,
+        "relationship_gap_count": 3,
+        "scope_gap_count": 0,
+        "unresolved_reference_count": 0,
+        "observation_limited_node_count": 0,
+        "ambiguous_path_count": 0
+      }
+    },
+    "operational_context": {
+      "investigation_scope": {
+        "scope_type": "topology",
+        "scope_targets": [
+          "input/src/db.ts",
+          "input/src/index.ts"
+        ],
+        "scope_confidence": "medium"
+      },
+      "attention_targets": [],
+      "blocking_conditions": [],
+      "required_evidence": [
+        "filesystem.read:input/src/db.ts",
+        "filesystem.read:input/src/index.ts"
       ],
-      "reference_graph": []
-    },
-    "observed_orphans": [
-      "package.json",
-      "tsconfig.json"
-    ],
-    "observed_hotspots": [
-      {
-        "file": "src/db.ts",
-        "incoming_edges": 1,
-        "outgoing_edges": 0
-      }
-    ],
-    "observed_bridges": [],
-    "structural_graph": {
-      "nodes": [
-        {
-          "id": "src/index.ts",
-          "type": "file"
-        },
-        {
-          "id": "src/db.ts",
-          "type": "file"
-        },
-        {
-          "id": "package.json",
-          "type": "file"
-        },
-        {
-          "id": "tsconfig.json",
-          "type": "file"
-        }
+      "operational_observations": [
+        "Single bridge dominates observed connectivity.",
+        "Boundary concentration suggests dependency centralization.",
+        "Relationship coverage is limited to one dependency chain."
       ],
-      "edges": [
-        {
-          "source": "src/index.ts",
-          "target": "src/db.ts",
-          "type": "import"
-        }
-      ]
-    },
-    "structural_delta": {
-      "added_files": [],
-      "removed_files": [],
-      "modified_files": [],
-      "metrics_delta": {
-        "surface_count": 0,
-        "boundary_count": 0,
-        "absence_count": 0
-      }
-    },
-    "topology_history": [
-      {
-        "step": 1,
-        "timestamp": "2026-06-12T02:00:00Z",
-        "fingerprint": {
-          "surface_count": 2,
-          "boundary_count": 1,
-          "absence_count": 1
-        }
-      }
-    ]
+      "rationale": [
+        "User requested an analysis of the repository topology, and the runtime identified a single bridge connecting two nodes as the primary structural feature."
+      ],
+      "escalation_reason": null,
+      "recommended_next_actions": [
+        "Invoke forensics mode on input/src/db.ts and input/src/index.ts"
+      ],
+      "investigation_hypotheses": [],
+      "investigation_risks": [],
+      "evidence_priorities": [],
+      "confidence_drivers": []
+    }
   },
-  "handover_attention": {
+  "epistemic_state": {
     "next_attention_targets": [
-      "expected_lockfile_absent"
+      "input/src/db.ts",
+      "input/src/index.ts"
     ],
-    "selection_basis": [
-      "absence_density"
-    ],
-    "attention_scope": "reproducibility audit",
-    "attention_reason": "observed missing package lockfiles for installation verification"
+    "attention_scope": "topology:bridge",
+    "attention_reason": "bridge endpoints selected as attention seed"
   }
 }

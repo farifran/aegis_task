@@ -44,8 +44,10 @@ jq -n \
   '{
     artifact_snapshot: {
       mode: "repair",
-      diff: $diff,
-      files_changed: ["src/index.ts"]
+      operational_context: {
+        diff: $diff,
+        files_changed: ["src/index.ts"]
+      }
     },
     epistemic_state: {
       next_attention_targets: ["src/index.ts"],
@@ -59,7 +61,7 @@ bash scripts/runtime/apply_candidate_diff.sh "${handover}" "${repo}"
 grep -q "export const soma" "${repo}/src/index.ts" \
   || fail "repair_candidate_was_not_materialized"
 
-jq '.artifact_snapshot.files_changed = ["src/other.ts"]' \
+jq '.artifact_snapshot.operational_context.files_changed = ["src/other.ts"]' \
   "${handover}" > "${handover}.invalid"
 
 git -C "${repo}" restore src/index.ts

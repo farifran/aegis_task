@@ -340,12 +340,6 @@ declare -Ar AEGIS_CAPABILITY_ARGUMENTS=(
 declare -ar AEGIS_DISCOVERY_EVIDENCE=(
   "filesystem.list_tree"
   "filesystem.read:epistemic_handover"
-  "filesystem.extract_import_graph"
-  "filesystem.extract_reference_graph"
-  "filesystem.extract_symbols"
-  "filesystem.extract_entrypoints"
-  "filesystem.extract_test_relationships"
-  "filesystem.extract_configuration_structure"
   "structural.builder"
   "runtime.attention_seed"
 )

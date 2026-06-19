@@ -29,13 +29,8 @@ assert_manifest_uses_filesystem_read_only() {
     and (.modes.discovery.evidence_capabilities == [
       "filesystem.list_tree",
       "filesystem.read",
-      "filesystem.extract_import_graph",
-      "filesystem.extract_reference_graph",
-      "filesystem.extract_symbols",
-      "filesystem.extract_entrypoints",
-      "filesystem.extract_test_relationships",
-      "filesystem.extract_configuration_structure",
-      "structural.builder"
+      "structural.builder",
+      "runtime.attention_seed"
     ])
     and (.modes.validation.evidence_capabilities == ["filesystem.read"])
   ' >/dev/null || fail "manifest_still_references_runtime_specific_reads"

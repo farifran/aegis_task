@@ -50,13 +50,15 @@ jq -n '
   {
     artifact_snapshot: {
       mode: "forensics",
-      repair_candidates: [
-        {
-          id: "src/index.ts",
-          reason: "test correction target",
-          evidence_refs: ["filesystem.search_symbol"]
-        }
-      ]
+      operational_context: {
+        repair_candidates: [
+          {
+            id: "src/index.ts",
+            reason: "test correction target",
+            evidence_refs: ["filesystem.search_symbol"]
+          }
+        ]
+      }
     },
     epistemic_state: {
       next_attention_targets: ["src/index.ts"],
@@ -184,7 +186,7 @@ if env \
   fail "empty_diff_was_accepted"
 fi
 
-jq '.artifact_snapshot.repair_candidates = []' \
+jq '.artifact_snapshot.operational_context.repair_candidates = []' \
   "${handover_file}" > "${handover_file}.tmp"
 mv "${handover_file}.tmp" "${handover_file}"
 

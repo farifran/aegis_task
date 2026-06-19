@@ -826,8 +826,8 @@ validate_artifact() {
         .artifact_snapshot
         | {
             source_mode: .mode,
-            diff: .diff,
-            files_changed: .files_changed
+            diff: .operational_context.diff,
+            files_changed: .operational_context.files_changed
           }
       ' "${AEGIS_EPISTEMIC_HANDOVER_FILE_INPUT}"
     )"
@@ -876,7 +876,7 @@ validate_artifact() {
       || executor_fatal "invalid_validation_artifact_contract"
 
     previous_candidate="$(
-      jq -c '.artifact_snapshot.candidate_result // empty' \
+      jq -c '.artifact_snapshot.operational_context.candidate_result // empty' \
         "${AEGIS_EPISTEMIC_HANDOVER_FILE_INPUT}"
     )"
 
@@ -895,7 +895,7 @@ validate_artifact() {
     fi
 
     previous_findings="$(
-      jq -c '.artifact_snapshot.adversarial_findings // empty' \
+      jq -c '.artifact_snapshot.operational_context.adversarial_findings // empty' \
         "${AEGIS_EPISTEMIC_HANDOVER_FILE_INPUT}"
     )"
 

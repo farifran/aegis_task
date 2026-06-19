@@ -1,312 +1,383 @@
 {
-  "mode": "forensics",
-  "status": "ok",
-  "summary": "Forensic analysis of Node dependency structure completed.",
-  "derived_metrics": {
-    "structural_fingerprint": {
-      "surface_count": 2,
-      "boundary_count": 1,
-      "absence_count": 1,
-      "entrypoint_count": 1,
-      "test_relationship_count": 0,
-      "import_edge_count": 1,
-      "reference_edge_count": 0,
-      "orphan_count": 2,
-      "hotspot_count": 1,
-      "density_score": 0.5,
-      "fragmentation_score": 0.0,
-      "centralization_score": 0.0,
-      "bridge_count": 0,
-      "topology_class": "script_library"
-    },
-    "structural_gravity": [
-      {
-        "file": "src/index.ts",
-        "gravity": {
-          "score": 60.0,
-          "formula": {
-            "incoming_edges": {
-              "count": 0.0,
-              "weight": 15.0
-            },
-            "outgoing_edges": {
-              "count": 1.0,
-              "weight": 10.0
-            },
-            "entrypoint_proximity": {
-              "count": 1.0,
-              "weight": 30.0
-            },
-            "boundary_crossing": {
-              "count": 1.0,
-              "weight": 20.0
-            }
+  "artifact_snapshot": {
+    "mode": "forensics",
+    "investigation_input": "analyze repository topology",
+    "generated_at": "2026-06-19T10:26:47Z",
+    "structural_context": {
+      "topology_index": {
+        "surfaces": [
+          {
+            "id": "surface_cluster_001",
+            "surface_kind": "cluster",
+            "member_count": 2,
+            "members": [
+              "input/src/db.ts",
+              "input/src/index.ts"
+            ],
+            "dominant_node": "input/src/db.ts",
+            "bridge_count": 1,
+            "boundary_count": 1,
+            "hotspot_count": 0,
+            "entrypoint_count": 1
+          },
+          {
+            "id": "surface_standalone_summary",
+            "surface_kind": "standalone",
+            "member_count": 3,
+            "members": [],
+            "dominant_node": null,
+            "bridge_count": 0,
+            "boundary_count": 0,
+            "hotspot_count": 0,
+            "entrypoint_count": 0
+          }
+        ],
+        "bridges": [
+          {
+            "id": "bridge_001",
+            "from": "input/src/db.ts",
+            "to": "input/src/index.ts",
+            "surface_ref": "surface_cluster_001"
+          }
+        ],
+        "boundaries": [
+          {
+            "id": "boundary_001",
+            "file": "input/src/db.ts",
+            "in_degree": 1,
+            "out_degree": 0,
+            "surface_ref": "surface_cluster_001"
+          }
+        ],
+        "hotspots": [],
+        "entrypoints": [
+          {
+            "id": "entrypoint_001",
+            "file": "input/src/index.ts",
+            "surface_ref": "surface_cluster_001"
+          }
+        ],
+        "node_index": {
+          "input/package.json": {
+            "surface_ref": "surface_standalone_001",
+            "surface_kind": "standalone",
+            "relation_visibility": "none_observed",
+            "is_entrypoint": false,
+            "is_hotspot": false,
+            "is_boundary": false,
+            "in_degree": 0,
+            "out_degree": 0,
+            "total_degree": 0,
+            "unresolved_dependency_count": 0,
+            "test_covered": false
+          },
+          "input/src/db.ts": {
+            "surface_ref": "surface_cluster_001",
+            "surface_kind": "cluster",
+            "relation_visibility": "has_observed_relationships",
+            "is_entrypoint": false,
+            "is_hotspot": false,
+            "is_boundary": true,
+            "in_degree": 1,
+            "out_degree": 0,
+            "total_degree": 1,
+            "unresolved_dependency_count": 0,
+            "test_covered": false,
+            "boundary_id": "boundary_001"
+          },
+          "input/src/index.ts": {
+            "surface_ref": "surface_cluster_001",
+            "surface_kind": "cluster",
+            "relation_visibility": "has_observed_relationships",
+            "is_entrypoint": true,
+            "is_hotspot": false,
+            "is_boundary": false,
+            "in_degree": 0,
+            "out_degree": 1,
+            "total_degree": 1,
+            "unresolved_dependency_count": 0,
+            "test_covered": false,
+            "entrypoint_id": "entrypoint_001",
+            "surface_status": "surface_member"
+          },
+          "input/target_system_profile.yml": {
+            "surface_ref": "surface_standalone_002",
+            "surface_kind": "standalone",
+            "relation_visibility": "none_observed",
+            "is_entrypoint": false,
+            "is_hotspot": false,
+            "is_boundary": false,
+            "in_degree": 0,
+            "out_degree": 0,
+            "total_degree": 0,
+            "unresolved_dependency_count": 0,
+            "test_covered": false
+          },
+          "input/tsconfig.json": {
+            "surface_ref": "surface_standalone_003",
+            "surface_kind": "standalone",
+            "relation_visibility": "none_observed",
+            "is_entrypoint": false,
+            "is_hotspot": false,
+            "is_boundary": false,
+            "in_degree": 0,
+            "out_degree": 0,
+            "total_degree": 0,
+            "unresolved_dependency_count": 0,
+            "test_covered": false
           }
         }
       },
-      {
-        "file": "src/db.ts",
-        "gravity": {
-          "score": 75.0,
-          "formula": {
-            "incoming_edges": {
-              "count": 1.0,
-              "weight": 15.0
-            },
-            "outgoing_edges": {
-              "count": 0.0,
-              "weight": 10.0
-            },
-            "entrypoint_proximity": {
-              "count": 1.0,
-              "weight": 20.0
-            },
-            "boundary_crossing": {
-              "count": 2.0,
-              "weight": 20.0
-            }
-          }
+      "topology_summary": {
+        "total_nodes": 5,
+        "total_edges": 1,
+        "resolved_edge_count": 1,
+        "unresolved_edge_count": 0,
+        "connected_node_count": 2,
+        "isolated_node_count": 3,
+        "cluster_surface_count": 1,
+        "standalone_surface_count": 1,
+        "total_surface_count": 2,
+        "boundary_count": 1,
+        "bridge_count": 1,
+        "bridge_emit_count": 1,
+        "bridge_truncated": false,
+        "hotspot_count": 0,
+        "entrypoint_count": 1
+      },
+      "ranked_targets": [
+        {
+          "id": "bridge_001",
+          "type": "bridge",
+          "surface_ref": "surface_cluster_001",
+          "score": 4,
+          "ranking_reason": "bridge_weight(4)",
+          "reason": "highest_bridge_count_surface:bridge"
+        },
+        {
+          "id": "boundary_001",
+          "type": "boundary",
+          "surface_ref": "surface_cluster_001",
+          "score": 3,
+          "ranking_reason": "boundary_weight(2)+in_degree(1)",
+          "reason": "highest_bridge_count_surface:boundary"
+        },
+        {
+          "id": "entrypoint_001",
+          "type": "entrypoint",
+          "surface_ref": "surface_cluster_001",
+          "score": 1,
+          "ranking_reason": "entrypoint_weight(1)",
+          "reason": "highest_bridge_count_surface:entrypoint"
+        }
+      ],
+      "bridge_data": [
+        {
+          "id": "bridge_001",
+          "from": "input/src/db.ts",
+          "to": "input/src/index.ts",
+          "surface_ref": "surface_cluster_001"
+        }
+      ],
+      "boundary_data": [
+        {
+          "id": "boundary_001",
+          "file": "input/src/db.ts",
+          "in_degree": 1,
+          "out_degree": 0,
+          "surface_ref": "surface_cluster_001"
+        }
+      ],
+      "hotspot_data": [],
+      "entrypoints": [
+        {
+          "id": "entrypoint_001",
+          "file": "input/src/index.ts",
+          "surface_ref": "surface_cluster_001"
+        }
+      ],
+      "evidence_summary": {
+        "coverage": {
+          "test_covered_file_count": 0,
+          "config_file_count": 3,
+          "uncovered_hotspot_count": 0
+        },
+        "payload_status": {
+          "consumed_payload_ok_count": 6,
+          "consumed_payload_missing_count": 0,
+          "consumed_payload_failed_count": 0
         }
       },
-      {
-        "file": "package.json",
-        "gravity": {
-          "score": 30.0,
-          "formula": {
-            "incoming_edges": {
-              "count": 0.0,
-              "weight": 15.0
-            },
-            "outgoing_edges": {
-              "count": 0.0,
-              "weight": 10.0
-            },
-            "entrypoint_proximity": {
-              "count": 0.0,
-              "weight": 30.0
-            },
-            "boundary_crossing": {
-              "count": 1.0,
-              "weight": 30.0
-            }
-          }
+      "unresolved_references": [],
+      "observed_request_alignment": {
+        "requested_paths": [],
+        "resolved_paths": [],
+        "path_resolutions": [],
+        "resolution_confidence": "none"
+      },
+      "gap_counts": {
+        "visibility_gap_count": 0,
+        "coverage_gap_count": 0,
+        "relationship_gap_count": 3,
+        "scope_gap_count": 0,
+        "unresolved_reference_count": 0,
+        "observation_limited_node_count": 0,
+        "ambiguous_path_count": 0
+      }
+    },
+    "operational_context": {
+      "status": "interpreted",
+      "summary": "The repository topology is characterized by a single-bridge dependency chain between a boundary data module (input/src/db.ts) and an entrypoint application module (input/src/index.ts), with three structurally isolated configuration files. The boundary node receives all observed inbound dependency traffic, indicating dependency centralization, while the entrypoint node drives the sole outbound dependency. No test coverage exists for any node in the active topology.",
+      "interpretations": [
+        {
+          "id": "interp_001",
+          "target": "input/src/db.ts",
+          "interpretation": "Boundary concentration: input/src/db.ts is the sole inbound dependency target (in_degree=1, out_degree=0), meaning all observed structural traffic terminates here. This centralization creates a single point of dependency for the entrypoint.",
+          "confidence": "high",
+          "evidence_refs": [
+            "filesystem_read_epistemic_handover.json"
+          ]
+        },
+        {
+          "id": "interp_002",
+          "target": "input/src/index.ts",
+          "interpretation": "Entrypoint drives sole dependency: input/src/index.ts is the only entrypoint and the sole source of the observed outbound dependency to the boundary, making it the structural root of the application's dependency graph.",
+          "confidence": "high",
+          "evidence_refs": [
+            "filesystem_read_epistemic_handover.json"
+          ]
+        },
+        {
+          "id": "interp_003",
+          "target": "input/src/db.ts",
+          "interpretation": "Zero test coverage on the boundary node: input/src/db.ts has test_covered=false despite being the dependency centralization point. Lack of coverage at the boundary increases risk of undetected regression when the boundary contract changes.",
+          "confidence": "high",
+          "evidence_refs": [
+            "filesystem_read_epistemic_handover.json"
+          ]
+        },
+        {
+          "id": "interp_004",
+          "target": "input/src/index.ts",
+          "interpretation": "Zero test coverage on the entrypoint: input/src/index.ts has test_covered=false despite being the application entrypoint and sole dependency origin.",
+          "confidence": "high",
+          "evidence_refs": [
+            "filesystem_read_epistemic_handover.json"
+          ]
+        },
+        {
+          "id": "interp_005",
+          "target": "input/src/db.ts",
+          "interpretation": "Boundary with zero out_degree suggests a leaf module: input/src/db.ts depends on nothing within the observed topology, indicating it is either a self-contained data access layer or its external dependencies are not captured in the current topology scope.",
+          "confidence": "medium",
+          "evidence_refs": [
+            "filesystem_read_epistemic_handover.json"
+          ]
         }
-      }
-    ],
-    "metric_definitions": {
-      "edge_density": {
-        "formula": "edge_count / possible_edges",
-        "substitution": "1 / 2",
-        "result": 0.5
-      },
-      "density_score": {
-        "formula": "import_edge_count / possible_edges",
-        "substitution": "1 / 2",
-        "result": 0.5
-      },
-      "fragmentation_score": {
-        "formula": "orphan_count / total_files",
-        "substitution": "0 / 4",
-        "result": 0.0
-      },
-      "centralization_score": {
-        "formula": "sum(max_degree - node_degree) / ((N-1)(N-2))",
-        "substitution": "0 / 2",
-        "result": 0.0
-      }
-    },
-    "surface_metrics": [
-      {
-        "surface_id": "surface_cluster_001",
-        "member_count": 2,
-        "import_degree": 1,
-        "reference_degree": 0,
-        "edge_density": 0.5
-      },
-      {
-        "surface_id": "surface_cluster_002",
-        "member_count": 2,
-        "import_degree": 0,
-        "reference_degree": 0,
-        "edge_density": 0.0
-      }
-    ],
-    "reachability": [
-      {
-        "file": "src/index.ts",
-        "reachability_radius": {
-          "reachable_nodes": 1,
-          "reachable_surfaces": 1,
-          "reachable_boundaries": 1
+      ],
+      "observations": [
+        {
+          "id": "obs_001",
+          "target": "input/src/db.ts",
+          "observation": "Boundary node with in_degree=1, out_degree=0, total_degree=1, no test coverage, no hotspot classification.",
+          "evidence_refs": [
+            "filesystem_read_epistemic_handover.json"
+          ]
+        },
+        {
+          "id": "obs_002",
+          "target": "input/src/index.ts",
+          "observation": "Entrypoint node with in_degree=0, out_degree=1, total_degree=1, no test coverage, no hotspot classification.",
+          "evidence_refs": [
+            "filesystem_read_epistemic_handover.json"
+          ]
+        },
+        {
+          "id": "obs_003",
+          "target": "input/package.json",
+          "observation": "Structurally isolated node with total_degree=0, not part of any cluster surface with observed relationships.",
+          "evidence_refs": [
+            "filesystem_read_epistemic_handover.json"
+          ]
+        },
+        {
+          "id": "obs_004",
+          "target": "input/tsconfig.json",
+          "observation": "Structurally isolated node with total_degree=0, not part of any cluster surface with observed relationships.",
+          "evidence_refs": [
+            "filesystem_read_epistemic_handover.json"
+          ]
+        },
+        {
+          "id": "obs_005",
+          "target": "input/target_system_profile.yml",
+          "observation": "Structurally isolated node with total_degree=0, not part of any cluster surface with observed relationships.",
+          "evidence_refs": [
+            "filesystem_read_epistemic_handover.json"
+          ]
+        },
+        {
+          "id": "obs_006",
+          "target": "input/src/db.ts",
+          "observation": "Single bridge (bridge_001) connects input/src/db.ts to input/src/index.ts, representing 100% of observed structural connectivity.",
+          "evidence_refs": [
+            "filesystem_read_epistemic_handover.json"
+          ]
         }
-      },
-      {
-        "file": "src/db.ts",
-        "reachability_radius": {
-          "reachable_nodes": 0,
-          "reachable_surfaces": 0,
-          "reachable_boundaries": 0
+      ],
+      "unresolved_questions": [
+        {
+          "id": "uq_001",
+          "question": "Does input/src/db.ts have external dependencies (e.g., database drivers, ORMs) not captured in the current topology scope?",
+          "targets": [
+            "input/src/db.ts"
+          ],
+          "evidence_gap": "No filesystem.read payload for input/src/db.ts was exposed; content inspection is unavailable."
+        },
+        {
+          "id": "uq_002",
+          "question": "What is the nature of the dependency from input/src/index.ts to input/src/db.ts (direct import, re-export, dynamic load)?",
+          "targets": [
+            "input/src/index.ts"
+          ],
+          "evidence_gap": "No filesystem.read payload for input/src/index.ts was exposed; content inspection is unavailable."
+        },
+        {
+          "id": "uq_003",
+          "question": "Why do three configuration files (package.json, tsconfig.json, target_system_profile.yml) have zero observed relationships despite typically being referenced during build and runtime?",
+          "targets": [
+            "input/package.json",
+            "input/tsconfig.json",
+            "input/target_system_profile.yml"
+          ],
+          "evidence_gap": "Topology analysis did not capture build-time or runtime configuration references; these may be implicit relationships outside static import analysis."
         }
-      }
-    ]
-  },
-  "interpretations": [
-    {
-      "target": "surface_cluster_001",
-      "derived_from": [
-        "observed_surfaces.surface_cluster_001"
       ],
-      "evidence_count": 1,
-      "implication": "Exposes core TypeScript implementation logic.",
-      "risk": "Errors in src/index.ts directly interrupt process startup.",
-      "hypothesis": null,
-      "risk_basis": [
-        "observed_surfaces.surface_cluster_001"
-      ],
-      "interpretation_class": "DESCRIPTIVE"
-    },
-    {
-      "target": "surface_cluster_002",
-      "derived_from": [
-        "observed_surfaces.surface_cluster_002"
-      ],
-      "evidence_count": 1,
-      "implication": "Exposes Node project and compiler configuration layers.",
-      "risk": "Invalid TS config breaks compilation.",
-      "hypothesis": null,
-      "risk_basis": [
-        "observed_surfaces.surface_cluster_002"
-      ],
-      "interpretation_class": "DESCRIPTIVE"
-    },
-    {
-      "target": "boundary_cluster_001",
-      "derived_from": [
-        "observed_boundaries.boundary_cluster_001"
-      ],
-      "evidence_count": 1,
-      "implication": "Separates compiler configurations and metadata from source implementation.",
-      "risk": "Trivial, low boundary constraint.",
-      "hypothesis": null,
-      "risk_basis": [
-        "observed_boundaries.boundary_cluster_001"
-      ],
-      "interpretation_class": "DESCRIPTIVE"
-    },
-    {
-      "target": "expected_lockfile_absent",
-      "derived_from": [
-        "observed_absences.expected_lockfile_absent"
-      ],
-      "evidence_count": 1,
-      "implication": "No lockfile exists to pin npm dependency trees. Translates to missing lockfile gap.",
-      "risk": "Nondeterministic production builds.",
-      "hypothesis": "Ad-hoc or newly initialized node project without package-lock.json.",
-      "risk_basis": [
-        "observed_absences.expected_lockfile_absent"
-      ],
-      "evidence_chain": [
-        "observed_absences.expected_lockfile_absent"
-      ],
-      "interpretation_class": "INFERRED"
-    },
-    {
-      "target": "observed_relationships.imports",
-      "derived_from": [
-        "observed_relationships.imports"
-      ],
-      "evidence_count": 1,
-      "implication": "The TypeScript source entrypoint imports database connectivity directly.",
-      "risk": "Database init failure blocks web application startup.",
-      "hypothesis": "Standard single-entry Node service design.",
-      "risk_basis": [
-        "observed_relationships.imports"
-      ],
-      "evidence_chain": [
-        "observed_relationships.imports"
-      ],
-      "interpretation_class": "INFERRED"
-    },
-    {
-      "target": "observed_orphans",
-      "derived_from": [
-        "observed_orphans"
-      ],
-      "evidence_count": 1,
-      "implication": "Configurations package.json and tsconfig.json do not import source files.",
-      "risk": "Unlinked configurations.",
-      "hypothesis": null,
-      "risk_basis": [
-        "observed_orphans"
-      ],
-      "interpretation_class": "DESCRIPTIVE"
-    },
-    {
-      "target": "observed_hotspots",
-      "derived_from": [
-        "observed_hotspots"
-      ],
-      "evidence_count": 1,
-      "implication": "db.ts is the main resource imported by the main entrypoint.",
-      "risk": "Tight coupling on database client instance.",
-      "hypothesis": null,
-      "risk_basis": [
-        "observed_hotspots"
-      ],
-      "interpretation_class": "DESCRIPTIVE"
-    },
-    {
-      "target": "structural_gravity.src/db.ts",
-      "derived_from": [
-        "structural_gravity"
-      ],
-      "evidence_count": 1,
-      "implication": "High structural gravity of 75.0 (driven by incoming edges contribution: 15.0, entrypoint proximity: 20.0, and boundary crossing: 40.0) highlights the database module dependency centrality.",
-      "risk": "Bugs in db.ts directly break index.ts startup sequences.",
-      "hypothesis": "Core persistence database adapter singleton.",
-      "risk_basis": [
-        "structural_gravity"
-      ],
-      "evidence_chain": [
-        "structural_gravity"
-      ],
-      "interpretation_class": "INFERRED"
-    },
-    {
-      "target": "reachability_raw.src/index.ts",
-      "derived_from": [
-        "reachability_raw"
-      ],
-      "evidence_count": 1,
-      "implication": "Exposes a structural reachability of 1 reachable node downstream when src/index.ts is modified.",
-      "risk": "Low downstream changes propagation risk.",
-      "hypothesis": null,
-      "risk_basis": [
-        "reachability_raw"
-      ],
-      "interpretation_class": "DESCRIPTIVE"
-    },
-    {
-      "target": "structural_fingerprint",
-      "derived_from": [
-        "structural_fingerprint"
-      ],
-      "evidence_count": 1,
-      "implication": "Minimal script library layout with a centralization score of 0.0. Classified as a script_library topology class.",
-      "risk": null,
-      "hypothesis": "script_library",
-      "risk_basis": [],
-      "evidence_chain": [
-        "structural_fingerprint"
-      ],
-      "interpretation_class": "INFERRED"
+      "confidence": "medium",
+      "repair_candidates": [
+        {
+          "id": "input/src/db.ts",
+          "reason": "Boundary node with zero test coverage and dependency centralization (sole inbound target). Adding test coverage at the boundary would mitigate regression risk for the most depended-upon module in the topology.",
+          "evidence_refs": [
+            "filesystem_read_epistemic_handover.json"
+          ]
+        },
+        {
+          "id": "input/src/index.ts",
+          "reason": "Entrypoint node with zero test coverage and sole outbound dependency origin. Test coverage at the entrypoint would validate the primary application integration path.",
+          "evidence_refs": [
+            "filesystem_read_epistemic_handover.json"
+          ]
+        }
+      ]
     }
-  ],
-  "handover_attention": {
+  },
+  "epistemic_state": {
     "next_attention_targets": [
-      "expected_lockfile_absent"
+      "input/src/db.ts",
+      "input/src/index.ts"
     ],
-    "attention_scope": "package-lock generation",
-    "attention_reason": "observed missing package lockfiles for installation verification"
+    "attention_scope": "topology:bridge_endpoints_with_zero_coverage",
+    "attention_reason": "Both active topology nodes lack test coverage; boundary centralization and entrypoint dependency origin are the primary structural risks identified from discovery topology evidence."
   }
 }

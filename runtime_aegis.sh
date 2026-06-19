@@ -578,33 +578,33 @@ validate_mode_preconditions() {
       echo "${handover_content}" | jq -e '
         .artifact_snapshot != null
         and .artifact_snapshot.mode == "forensics"
-        and (.artifact_snapshot.repair_candidates | type == "array" and length > 0)
+        and (.artifact_snapshot.operational_context.repair_candidates | type == "array" and length > 0)
       ' >/dev/null 2>&1 || runtime_fatal "precondition_failed_forensics_artifact_missing_or_invalid"
       ;;
     optimize)
       echo "${handover_content}" | jq -e '
         .artifact_snapshot != null
         and .artifact_snapshot.mode == "repair"
-        and (.artifact_snapshot.diff | type == "string" and length > 0 and . != "(no changes)")
-        and (.artifact_snapshot.files_changed | type == "array" and length > 0)
+        and (.artifact_snapshot.operational_context.diff | type == "string" and length > 0 and . != "(no changes)")
+        and (.artifact_snapshot.operational_context.files_changed | type == "array" and length > 0)
       ' >/dev/null 2>&1 || runtime_fatal "precondition_failed_repair_candidate_missing_or_invalid"
       ;;
     adversarial)
       echo "${handover_content}" | jq -e '
         .artifact_snapshot != null
         and .artifact_snapshot.mode == "optimize"
-        and (.artifact_snapshot.diff | type == "string" and length > 0 and . != "(no changes)")
-        and (.artifact_snapshot.files_changed | type == "array" and length > 0)
+        and (.artifact_snapshot.operational_context.diff | type == "string" and length > 0 and . != "(no changes)")
+        and (.artifact_snapshot.operational_context.files_changed | type == "array" and length > 0)
       ' >/dev/null 2>&1 || runtime_fatal "precondition_failed_optimize_candidate_missing_or_invalid"
       ;;
     validation)
       echo "${handover_content}" | jq -e '
         .artifact_snapshot != null
         and .artifact_snapshot.mode == "adversarial"
-        and (.artifact_snapshot.candidate_result | type == "object")
-        and (.artifact_snapshot.candidate_result.diff | type == "string" and length > 0 and . != "(no changes)")
-        and (.artifact_snapshot.candidate_result.files_changed | type == "array" and length > 0)
-        and (.artifact_snapshot.adversarial_findings | type == "array")
+        and (.artifact_snapshot.operational_context.candidate_result | type == "object")
+        and (.artifact_snapshot.operational_context.candidate_result.diff | type == "string" and length > 0 and . != "(no changes)")
+        and (.artifact_snapshot.operational_context.candidate_result.files_changed | type == "array" and length > 0)
+        and (.artifact_snapshot.operational_context.adversarial_findings | type == "array")
       ' >/dev/null 2>&1 || runtime_fatal "precondition_failed_adversarial_findings_missing_or_invalid"
       ;;
   esac
@@ -906,20 +906,35 @@ promote_epistemic_handover() {
                 investigation_input: $investigation_input,
                 generated_at: (if $orig | has("generated_at") then $orig.generated_at else $generated_at end),
                 structural_context: {
-                  topology_summary:           $bp.topology_summary,
                   topology_index:             $bp.topology_index,
+                  topology_summary:           $bp.topology_summary,
                   ranked_targets:             $bp.ranked_targets,
+                  bridge_data:                $bp.topology_index.bridges,
+                  boundary_data:              $bp.topology_index.boundaries,
+                  hotspot_data:               $bp.topology_index.hotspots,
+                  entrypoints:                $bp.topology_index.entrypoints,
+                  evidence_summary:           $bp.evidence,
+                  unresolved_references:      $bp.unresolved_references,
                   observed_request_alignment: $bp.observed_request_alignment,
-                  gap_counts:                 $bp.gap_counts,
-                  evidence:                   $bp.evidence,
-                  unresolved_references:      $bp.unresolved_references
+                  gap_counts:                 $bp.gap_counts
                 },
                 operational_context: (
-                  $orig
-                  | del(.handover_attention, .mode, .investigation_input,
-                        .topology_summary, .topology_index, .ranked_targets,
+                  (if ($orig | has("operational_context")) then
+                    $orig.operational_context
+                  else
+                    ($orig
+                     | del(.handover_attention, .mode, .investigation_input,
+                           .topology_summary, .topology_index, .ranked_targets,
+                           .observed_request_alignment, .gap_counts, .evidence,
+                           .unresolved_references, .generated_at,
+                           .boundary_count, .bridge_count, .hotspot_count,
+                           .entrypoint_count, .unresolved_reference_count)
+                    )
+                  end)
+                  | del(.topology_summary, .topology_index, .ranked_targets,
                         .observed_request_alignment, .gap_counts, .evidence,
-                        .unresolved_references, .generated_at)
+                        .unresolved_references, .boundary_count, .bridge_count,
+                        .hotspot_count, .entrypoint_count, .unresolved_reference_count)
                 )
               },
               epistemic_state: (
@@ -935,30 +950,46 @@ promote_epistemic_handover() {
     })" || runtime_fatal "failed_to_materialize_handover"
   else
     # Builder payload missing — promote without structural injection.
-    # structural_context will be empty; downstream mode preconditions
-    # will fail with a clear error.
+    # Preserve structural_context and flat topology keys from preceding handover if it exists.
+    local prev_arg=()
+    if [[ -f "${AEGIS_EPISTEMIC_HANDOVER_FILE}" ]]; then
+      prev_arg=(--slurpfile prev "${AEGIS_EPISTEMIC_HANDOVER_FILE}")
+    fi
+
     handover_json="$({
       printf '%s' "${AEGIS_PROMOTED_ARTIFACT_PAYLOAD}" |
-        jq -c \
+        jq -c "${prev_arg[@]}" \
           --arg generated_at "${AEGIS_EXECUTION_TIMESTAMP}" \
           --arg investigation_input "${AEGIS_INVESTIGATION_INPUT}" '
           . as $orig
+          | ($prev[0].artifact_snapshot // {}) as $pr
           | {
               artifact_snapshot: {
-                mode: .mode,
+                mode: $orig.mode,
                 investigation_input: $investigation_input,
-                generated_at: (if has("generated_at") then .generated_at else $generated_at end),
-                structural_context: {},
+                generated_at: (if $orig | has("generated_at") then $orig.generated_at else $generated_at end),
+                structural_context:         ($pr.structural_context // {}),
                 operational_context: (
-                  $orig
-                  | del(.handover_attention, .mode, .investigation_input,
-                        .topology_summary, .topology_index, .ranked_targets,
+                  (if ($orig | has("operational_context")) then
+                    $orig.operational_context
+                  else
+                    ($orig
+                     | del(.handover_attention, .mode, .investigation_input,
+                           .topology_summary, .topology_index, .ranked_targets,
+                           .observed_request_alignment, .gap_counts, .evidence,
+                           .unresolved_references, .generated_at,
+                           .boundary_count, .bridge_count, .hotspot_count,
+                           .entrypoint_count, .unresolved_reference_count)
+                    )
+                  end)
+                  | del(.topology_summary, .topology_index, .ranked_targets,
                         .observed_request_alignment, .gap_counts, .evidence,
-                        .unresolved_references, .generated_at)
+                        .unresolved_references, .boundary_count, .bridge_count,
+                        .hotspot_count, .entrypoint_count, .unresolved_reference_count)
                 )
               },
               epistemic_state: (
-                .handover_attention //
+                $orig.handover_attention //
                 {
                   next_attention_targets: [],
                   attention_scope: "none",

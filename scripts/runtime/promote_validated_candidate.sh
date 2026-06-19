@@ -50,8 +50,8 @@ cleanup() {
 
 trap cleanup EXIT
 handover_file="${REPOSITORY_ROOT}/.harness/runtime/epistemic_handover.json"
-if [[ -f "${handover_file}" ]] && jq -e '.artifact_snapshot.candidate_result.diff' "${handover_file}" >/dev/null 2>&1; then
-  jq -r '.artifact_snapshot.candidate_result.diff | gsub("\\\\n"; "\n") | gsub("\\\\\\\\"; "\\")' "${handover_file}" > "${diff_file}"
+if [[ -f "${handover_file}" ]] && jq -e '.artifact_snapshot.operational_context.candidate_result.diff' "${handover_file}" >/dev/null 2>&1; then
+  jq -r '.artifact_snapshot.operational_context.candidate_result.diff | gsub("\\\\n"; "\n") | gsub("\\\\\\\\"; "\\")' "${handover_file}" > "${diff_file}"
 else
   jq -r '.validated_candidate.diff' "${ARTIFACT_FILE}" > "${diff_file}"
 fi

@@ -217,6 +217,10 @@ If a lower layer conflicts with this constitution, this constitution wins.
 - No interpretation masquerading as observation.
 - No validation masquerading as discovery.
 - No epistemic handover masquerading as truth.
+- Discovery must never repeat metrics, counts, or structural facts (e.g. node counts, edge counts, bridge counts) already present in the structural_context.
+- Discovery must stop describing/narrating the topology structure and exclusively produce: hypotheses, priorities, risks, gaps, next steps, and investigative strategy (what to do with what exists, rather than what exists).
+
+
 
 ---
 

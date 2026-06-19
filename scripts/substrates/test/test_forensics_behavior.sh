@@ -324,10 +324,18 @@ assert_handover_snapshot_matches_artifact() {
       and ((keys | sort) == ["artifact_snapshot", "epistemic_state"])
       and (.artifact_snapshot | type == "object")
       and (.artifact_snapshot.mode == $expected_artifact_payload.mode)
-      and (.artifact_snapshot.status == $expected_artifact_payload.status)
-      and (.artifact_snapshot.summary == $expected_artifact_payload.summary)
+      and (
+        if $expected_artifact_payload.mode == "discovery" then
+          (.artifact_snapshot.operational_context.status == $expected_artifact_payload.operational_context.status)
+          and (.artifact_snapshot.operational_context.summary == $expected_artifact_payload.operational_context.summary)
+          and (.artifact_snapshot.operational_context.observed_payloads == $expected_artifact_payload.operational_context.observed_payloads)
+        else
+          (.artifact_snapshot.operational_context.status == $expected_artifact_payload.status)
+          and (.artifact_snapshot.operational_context.summary == $expected_artifact_payload.summary)
+          and (.artifact_snapshot.operational_context.observed_payloads == $expected_artifact_payload.observed_payloads)
+        end
+      )
       and (.artifact_snapshot.investigation_input == $expected_investigation_input)
-      and (.artifact_snapshot.observed_payloads == $expected_artifact_payload.observed_payloads)
       and (.artifact_snapshot.generated_at | type == "string" and length > 0)
       and ((.artifact_snapshot | has("handover_attention")) == false)
       and (.epistemic_state == $expected_artifact_payload.handover_attention)
@@ -350,10 +358,18 @@ assert_runtime_read_handover_matches_artifact() {
       and .error == null
       and (((.payload.content | fromjson).artifact_snapshot) | type == "object")
       and (((.payload.content | fromjson).artifact_snapshot).mode == $expected_artifact_payload.mode)
-      and (((.payload.content | fromjson).artifact_snapshot).status == $expected_artifact_payload.status)
-      and (((.payload.content | fromjson).artifact_snapshot).summary == $expected_artifact_payload.summary)
+      and (
+        if $expected_artifact_payload.mode == "discovery" then
+          (((.payload.content | fromjson).artifact_snapshot).operational_context.status == $expected_artifact_payload.operational_context.status)
+          and (((.payload.content | fromjson).artifact_snapshot).operational_context.summary == $expected_artifact_payload.operational_context.summary)
+          and (((.payload.content | fromjson).artifact_snapshot).operational_context.observed_payloads == $expected_artifact_payload.operational_context.observed_payloads)
+        else
+          (((.payload.content | fromjson).artifact_snapshot).operational_context.status == $expected_artifact_payload.status)
+          and (((.payload.content | fromjson).artifact_snapshot).operational_context.summary == $expected_artifact_payload.summary)
+          and (((.payload.content | fromjson).artifact_snapshot).operational_context.observed_payloads == $expected_artifact_payload.observed_payloads)
+        end
+      )
       and (((.payload.content | fromjson).artifact_snapshot).investigation_input == $expected_investigation_input)
-      and (((.payload.content | fromjson).artifact_snapshot).observed_payloads == $expected_artifact_payload.observed_payloads)
       and (((.payload.content | fromjson).artifact_snapshot).generated_at | type == "string" and length > 0)
       and ((((.payload.content | fromjson).artifact_snapshot) | has("handover_attention")) == false)
       and (((.payload.content | fromjson).epistemic_state) == $expected_artifact_payload.handover_attention)

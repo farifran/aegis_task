@@ -327,6 +327,24 @@ render_bounded_payload_section() {
     cat "${payload_path}" > "${compact_file}"
   fi
 
+  # The structural.builder payload contains a node_index (reverse lookup
+  # table, file -> topology facts) that is consumed by Forensics via the
+  # epistemic handover — NOT by the Discovery LLM. It grows linearly with
+  # node count and can dominate the payload (30KB+ for ~80 nodes), pushing
+  # it past the per-payload byte limit and causing truncation that breaks
+  # the JSON. Strip it from the LLM evidence copy; the full payload on disk
+  # (with node_index intact) is still read by promote_epistemic_handover.
+  if [[ "${payload_name}" == "structural_builder.json" ]]; then
+    local stripped_file
+    stripped_file="$(mktemp)"
+    if jq -c '.payload = { topology_summary: .payload.topology_summary }' \
+        "${compact_file}" > "${stripped_file}" 2>/dev/null; then
+      mv "${stripped_file}" "${compact_file}"
+    else
+      rm -f "${stripped_file}" >/dev/null 2>&1 || true
+    fi
+  fi
+
   local payload_size
   payload_size="$(
     wc -c < "${compact_file}"
@@ -357,6 +375,17 @@ render_bounded_payload_section() {
 
 assemble_system_prompt() {
 
+  local mode_specific_instructions=""
+  if [[ "${AEGIS_MODE}" == "forensics" ]]; then
+    mode_specific_instructions="CRITICAL FORENSICS CONTRACT REQUIREMENT: The array 'handover_attention.next_attention_targets' MUST be exactly identical (both in order and elements) to the list of 'id' values extracted from the 'repair_candidates' array. Do not add any target to next_attention_targets unless it is also listed in repair_candidates, and vice versa. Furthermore, repair candidate 'id's MUST ONLY be files that are part of the active topology (i.e. bridges, boundaries, hotspots, entrypoints, or surface cluster members). Do NOT propose structurally isolated files (with zero relationships/total_degree=0) as repair candidates under any circumstances."
+  elif [[ "${AEGIS_MODE}" == "discovery" ]]; then
+    mode_specific_instructions="CRITICAL DISCOVERY CONTEXT CONSTRAINTS: You must stop describing or narrating the topology structure verbatim (never repeat counts, metrics, or raw facts such as node/edge/bridge/boundary counts). Instead, you must exclusively produce operational context: hypotheses, priorities, risks, gaps, next steps, and investigative strategy (what to do with what exists, not what exists). Populate the following fields inside 'operational_context':
+- 'investigation_hypotheses': qualitative hypotheses about structural/dependency patterns.
+- 'investigation_risks': qualitative risks in the current topology/scope (e.g. dead code, hidden entrypoints).
+- 'evidence_priorities': specific capabilities and targets to prioritize for collection.
+- 'confidence_drivers': factors driving structural/operational confidence (e.g. 'Bridge observed mechanically')."
+  fi
+
   cat > "${TMP_SYSTEM_PROMPT_FILE}" <<EOF
 You are executing inside Aegis Harness.
 
@@ -374,6 +403,8 @@ Execution model:
 The runtime provides one operator-defined investigation input.
 
 You must treat that investigation input as the current investigation demand without distinguishing whether it originated from an issue or an informal prompt.
+
+${mode_specific_instructions}
 
 You must:
 - consume only runtime-selected evidence
