@@ -88,6 +88,10 @@ declare -A PIPELINES=(
 PIPELINE="mutation"
 TARGET=""
 RESUME=false
+UNTIL=""
+ISSUE_NUMBER=""
+INVESTIGATION_INPUT=""
+declare -a POSITIONAL=()
 
 declare -A MODE_TIMINGS
 declare -a EXECUTION_MODES
@@ -198,16 +202,18 @@ run_mode() {
 
   start=$(date +%s)
 
+  local cmd=(bash runtime_aegis.sh "${mode}")
   if [[ -n "${TARGET}" ]]; then
-    bash runtime_aegis.sh \
-      "${mode}" \
-      --target "${TARGET}" \
-      "Run Aegis Pipeline"
-  else
-    bash runtime_aegis.sh \
-      "${mode}" \
-      "Run Aegis Pipeline"
+    cmd+=("--target" "${TARGET}")
   fi
+  if [[ -n "${ISSUE_NUMBER}" ]]; then
+    cmd+=("--issue" "${ISSUE_NUMBER}")
+  fi
+  if [[ -n "${INVESTIGATION_INPUT}" ]]; then
+    cmd+=("${INVESTIGATION_INPUT}")
+  fi
+
+  "${cmd[@]}"
 
   end=$(date +%s)
 
@@ -303,18 +309,41 @@ parse_cli() {
         PIPELINE="readonly"
         ;;
 
+      --pipeline)
+        shift
+        [[ $# -gt 0 ]] || { echo "[RUN][FATAL] missing pipeline value" >&2; exit 1; }
+        PIPELINE="$1"
+        ;;
+
+      --until)
+        shift
+        [[ $# -gt 0 ]] || { echo "[RUN][FATAL] missing until value" >&2; exit 1; }
+        UNTIL="$1"
+        ;;
+
       --resume)
         RESUME=true
         ;;
 
       --target)
         shift
+        [[ $# -gt 0 ]] || { echo "[RUN][FATAL] missing target value" >&2; exit 1; }
         TARGET="$1"
         ;;
 
-      *)
-        echo "[RUN][FATAL] unknown argument: $1"
+      --issue)
+        shift
+        [[ $# -gt 0 ]] || { echo "[RUN][FATAL] missing issue value" >&2; exit 1; }
+        ISSUE_NUMBER="$1"
+        ;;
+
+      -*)
+        echo "[RUN][FATAL] unknown argument: $1" >&2
         exit 1
+        ;;
+
+      *)
+        POSITIONAL+=("$1")
         ;;
 
     esac
@@ -330,6 +359,20 @@ main() {
 
   resolve_default_target
 
+  [[ -n "${PIPELINES[$PIPELINE]:-}" ]] || {
+    echo "[RUN][FATAL] unknown pipeline: ${PIPELINE}" >&2
+    exit 1
+  }
+
+  # Resolve investigation input priority
+  if [[ -n "${ISSUE_NUMBER}" ]]; then
+    INVESTIGATION_INPUT=""
+  elif [[ "${#POSITIONAL[@]}" -gt 0 ]]; then
+    INVESTIGATION_INPUT="${POSITIONAL[*]}"
+  else
+    INVESTIGATION_INPUT="Analyze repository"
+  fi
+
   check_dependencies
 
   if $RESUME; then
@@ -342,6 +385,10 @@ main() {
 
   for mode in "${EXECUTION_MODES[@]}"; do
     run_mode "${mode}"
+    if [[ -n "${UNTIL:-}" ]] && [[ "${mode}" == "${UNTIL}" ]]; then
+      echo "[RUN] Stopped at mode ${mode} due to --until limit."
+      break
+    fi
   done
 
   show_final_report
