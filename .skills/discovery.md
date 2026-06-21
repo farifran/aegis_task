@@ -98,7 +98,7 @@ All fields generated or copied by Discovery are placed under the `operational_co
 | `attention_targets` | `runtime.attention_seed` | Hotspots in scope. Copy directly into output. |
 | `blocking_conditions` | `runtime.attention_seed` | Factual conditions impeding investigation. Copy directly into output. |
 | `required_evidence` | Cognitive | List of capabilities or resources that need to be collected/consulted to address the investigation input. |
-| `operational_observations` | Cognitive | Neutral, qualitative, interpretive observations explaining the meaning of the topology. Discovery MUST NOT repeat metrics or counts (e.g. node counts, edge counts, bridge counts) already present in structural_context. |
+| `operational_observations` | Cognitive | Neutral, qualitative observations about the **structural shape** of the topology — what the graph pattern implies operationally. MUST NOT repeat metrics or counts already in structural_context. MUST NOT name semantic domains based on file content or module names (e.g. do not write "authentication domain" or "billing service" — reference the mechanical topology role instead: "boundary node", "entrypoint", or the `responsibility` field from node_index). MUST NOT assign architectural role labels such as orchestrator, controller, gateway, facade. MUST NOT assess risk (risk belongs to Forensics). |
 | `rationale` | Cognitive | Explains the reasoning behind the investigation priority and why certain attention targets were selected. |
 | `escalation_reason` | Cognitive | Null, or a string explaining why the investigation is blocked or requires escalation. |
 | `recommended_next_actions` | Cognitive | Specific, actionable recommended next steps (e.g. invoke forensics on target X). |
@@ -278,6 +278,9 @@ If absent, set to `[]`.
 - Does NOT generate `summary` — copies from runtime
 - Does NOT generate `findings` — copies from runtime
 - Does NOT emit detailed defect root-cause interpretations — belongs to Forensics
+- Does NOT assign architectural role labels to nodes (orchestrator, controller, gateway, facade, etc.) — reference the mechanical `responsibility` field from `node_index` instead
+- Does NOT name or infer semantic domains from file content or module names (e.g. do not write "authentication domain", "billing service", "payment module" — these require reading file content, which is Forensics territory)
+- Does NOT assess risk — risk assessment (`investigation_risks`) belongs to Forensics
 
 ---
 
@@ -320,7 +323,10 @@ The following patterns are prohibited in any Discovery output:
 | Invented topology ids | Builder-assigned ids only |
 | Renamed topology elements | Original builder ids only |
 | Altering runtime-owned fields based on observation | Observational fields are separate from runtime-owned fields |
-| Repeating raw counts or structural facts verbatim in rationale/observations | Explaining *why* those facts matter to the investigation, highlighting gaps, hypotheses, prioritization, and next steps |
+| Repeating raw counts or structural facts verbatim in rationale/observations | Explaining *why* those facts matter to the investigation, highlighting gaps, prioritization, and next steps |
+| Architectural role labels assigned to nodes: `"central orchestrator"`, `"gateway"`, `"controller"`, `"facade"` | Reference the mechanical `responsibility` field from `node_index` (e.g. `"entrypoint node"`, `"service boundary node"`) |
+| Semantic domain names inferred from file content or module names: `"authentication domain"`, `"billing service"`, `"payment module"`, `"between auth and billing domains"` | Reference the mechanical topology role and `responsibility` classification only (e.g. `"two boundary nodes with responsibility:service"`, `"the entrypoint node"`) |
+| Risk assessment language: `"integration risk"`, `"coupling risk"`, `"failure risk"` | Risk assessment belongs to Forensics (`investigation_risks`). Discovery may note structural gaps without naming risk. |
 
 File paths are permitted **only** in:
 - `observed_request_alignment.requested_paths`

@@ -383,7 +383,12 @@ assemble_system_prompt() {
   elif [[ "${AEGIS_MODE}" == "discovery" ]]; then
     mode_specific_instructions="CRITICAL DISCOVERY CONTEXT CONSTRAINTS: You must stop describing or narrating the topology structure verbatim (never repeat counts, metrics, or raw facts such as node/edge/bridge/boundary counts). Instead, you must exclusively produce operational context: priorities, gaps, next steps, and investigative strategy (what to do with what exists, not what exists). Populate the following fields inside 'operational_context':
 - 'evidence_priorities': specific capabilities and targets to prioritize for collection.
-- 'confidence_drivers': factors driving structural/operational confidence (e.g. 'Bridge observed mechanically')."
+- 'confidence_drivers': factors driving structural/operational confidence (e.g. 'Bridge observed mechanically').
+
+HARD PROHIBITIONS for Discovery operational_observations and rationale:
+- Do NOT assign architectural role labels to nodes: words like 'orchestrator', 'controller', 'gateway', 'facade', 'central hub' are FORBIDDEN. Reference the mechanical topology role instead (e.g. 'entrypoint node', 'boundary node', 'hotspot').
+- Do NOT name or infer semantic domains from file content or module names: phrases like 'authentication domain', 'billing service', 'payment module', 'between auth and billing', 'service domains' are FORBIDDEN. You have not read file content — reference the mechanical responsibility classification from node_index instead (e.g. 'two boundary nodes with responsibility:service').
+- Do NOT assess risk: phrases like 'integration risk', 'coupling risk', 'failure risk' are FORBIDDEN. Risk assessment belongs to Forensics (investigation_risks field). Discovery may note structural gaps without naming risk."
   fi
 
   cat > "${TMP_SYSTEM_PROMPT_FILE}" <<EOF
