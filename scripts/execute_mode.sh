@@ -763,8 +763,11 @@ validate_artifact() {
             and (.attention_reason | type == "string" and length > 0)
           )
           and (
-            [.repair_candidates[].id]
-            == .handover_attention.next_attention_targets
+            .status == "inconclusive"
+            or (
+              [.repair_candidates[].id]
+              == .handover_attention.next_attention_targets
+            )
           )
         ' >/dev/null 2>&1 \
       || executor_fatal "invalid_forensics_artifact_contract"

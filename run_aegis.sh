@@ -384,6 +384,19 @@ main() {
   local mode
 
   for mode in "${EXECUTION_MODES[@]}"; do
+    if [[ "${mode}" == "repair" ]] && [[ -f "${HANDOVER_FILE}" ]]; then
+      local candidate_count
+      candidate_count="$(
+        jq -r '.artifact_snapshot.operational_context.repair_candidates | length // 0' \
+          "${HANDOVER_FILE}" 2>/dev/null || echo 0
+      )"
+      if [[ "${candidate_count}" -eq 0 ]]; then
+        echo
+        echo "[RUN] No repair candidates proposed. Halting pipeline to collect more evidence."
+        break
+      fi
+    fi
+
     run_mode "${mode}"
     if [[ -n "${UNTIL:-}" ]] && [[ "${mode}" == "${UNTIL}" ]]; then
       echo "[RUN] Stopped at mode ${mode} due to --until limit."
