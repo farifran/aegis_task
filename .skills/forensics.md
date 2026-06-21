@@ -246,6 +246,13 @@ Forensics must include a minimal `handover_attention` object that narrows the ro
 
 Forensics must include `repair_candidates`.
 
+CRITICAL RULES FOR REPAIR CANDIDATES:
+- Repair candidates must represent identified, concrete repair or mutation opportunities (e.g., a specific defect, missing function, failing test, lint issue, or clear mechanical discrepancy).
+- Files that merely require further reading, more evidence, or are listed as "attention targets", "required_evidence", or "recommended_next_actions" must NOT be treated as repair candidates unless there is explicit evidence of a defect inside them.
+- "Need to read file" or "Investigation target" is NOT a valid reason to propose a repair candidate. Proposing a candidate requires a mutation justification (e.g., "Defect identified in function X").
+- If the investigation is inconclusive (status = "inconclusive", confidence = "low") and no repairable condition or defect has been identified, `repair_candidates` MUST be empty (`[]`).
+- If no repairable condition exists, or if evidence is insufficient to justify a mutation, emit `"repair_candidates": []` and request additional evidence via handover attention instead.
+
 Each repair candidate must:
 
 - contain exactly `id`, `reason`, and `evidence_refs`;
