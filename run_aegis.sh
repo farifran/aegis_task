@@ -317,6 +317,10 @@ main() {
 
   parse_cli "$@"
 
+  if [[ -z "${TARGET}" ]]; then
+    TARGET="src"
+  fi
+
   check_dependencies
 
   if $RESUME; then
