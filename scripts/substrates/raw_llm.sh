@@ -385,10 +385,14 @@ assemble_system_prompt() {
 - 'evidence_priorities': specific capabilities and targets to prioritize for collection.
 - 'confidence_drivers': factors driving structural/operational confidence (e.g. 'Bridge observed mechanically').
 
+FUNDAMENTAL RULE: The subject of every operational_observations entry is the INVESTIGATION, not the system under investigation. Ask yourself: am I describing what the investigation must do, or am I describing what the system does? Only the former is permitted.
+
 HARD PROHIBITIONS for Discovery operational_observations and rationale:
 - Do NOT assign architectural role labels to nodes: words like 'orchestrator', 'controller', 'gateway', 'facade', 'central hub' are FORBIDDEN. Reference the mechanical topology role instead (e.g. 'entrypoint node', 'boundary node', 'hotspot').
 - Do NOT name or infer semantic domains from file content or module names: phrases like 'authentication domain', 'billing service', 'payment module', 'between auth and billing', 'service domains' are FORBIDDEN. You have not read file content — reference the mechanical responsibility classification from node_index instead (e.g. 'two boundary nodes with responsibility:service').
-- Do NOT assess risk: phrases like 'integration risk', 'coupling risk', 'failure risk' are FORBIDDEN. Risk assessment belongs to Forensics (investigation_risks field). Discovery may note structural gaps without naming risk."
+- Do NOT assess risk: phrases like 'integration risk', 'coupling risk', 'failure risk' are FORBIDDEN. Risk assessment belongs to Forensics (investigation_risks field). Discovery may note structural gaps without naming risk.
+- Do NOT infer module function from topology position: phrases like 'it mediates connectivity', 'it orchestrates requests', 'it likely validates', 'dependency mediation role', 'validates bridge semantics', 'operational flow' are FORBIDDEN. Topology reveals structure, not function. Function requires reading file content — that is Forensics. State topological facts only: 'entrypoint node connects to two boundary nodes via bridge_001 and bridge_002'.
+- Do NOT describe what the SYSTEM does: the subject of operational_observations is always the investigation. WRONG: 'The entrypoint mediates connectivity between boundary nodes.' RIGHT: 'Evidence collection at the entrypoint node is required before forensics can interpret boundary relationships.'"
   fi
 
   cat > "${TMP_SYSTEM_PROMPT_FILE}" <<EOF

@@ -98,7 +98,7 @@ All fields generated or copied by Discovery are placed under the `operational_co
 | `attention_targets` | `runtime.attention_seed` | Hotspots in scope. Copy directly into output. |
 | `blocking_conditions` | `runtime.attention_seed` | Factual conditions impeding investigation. Copy directly into output. |
 | `required_evidence` | Cognitive | List of capabilities or resources that need to be collected/consulted to address the investigation input. |
-| `operational_observations` | Cognitive | Neutral, qualitative observations about the **structural shape** of the topology — what the graph pattern implies operationally. MUST NOT repeat metrics or counts already in structural_context. MUST NOT name semantic domains based on file content or module names (e.g. do not write "authentication domain" or "billing service" — reference the mechanical topology role instead: "boundary node", "entrypoint", or the `responsibility` field from node_index). MUST NOT assign architectural role labels such as orchestrator, controller, gateway, facade. MUST NOT assess risk (risk belongs to Forensics). |
+| `operational_observations` | Cognitive | Observations strictly about the **investigation state** — evidence gaps that prevent progression, why the ranked targets were selected as investigation priority, structural constraints on the current investigation strategy. The subject of every observation is the **investigation**, not the system. MUST NOT describe what system components do, what code is responsible for, or infer system function from topology position. MUST NOT repeat metrics or counts already in structural_context. MUST NOT name semantic domains based on file content or module names. MUST NOT assign architectural role labels. MUST NOT assess risk. |
 | `rationale` | Cognitive | Explains the reasoning behind the investigation priority and why certain attention targets were selected. |
 | `escalation_reason` | Cognitive | Null, or a string explaining why the investigation is blocked or requires escalation. |
 | `recommended_next_actions` | Cognitive | Specific, actionable recommended next steps (e.g. invoke forensics on target X). |
@@ -327,6 +327,8 @@ The following patterns are prohibited in any Discovery output:
 | Architectural role labels assigned to nodes: `"central orchestrator"`, `"gateway"`, `"controller"`, `"facade"` | Reference the mechanical `responsibility` field from `node_index` (e.g. `"entrypoint node"`, `"service boundary node"`) |
 | Semantic domain names inferred from file content or module names: `"authentication domain"`, `"billing service"`, `"payment module"`, `"between auth and billing domains"` | Reference the mechanical topology role and `responsibility` classification only (e.g. `"two boundary nodes with responsibility:service"`, `"the entrypoint node"`) |
 | Risk assessment language: `"integration risk"`, `"coupling risk"`, `"failure risk"` | Risk assessment belongs to Forensics (`investigation_risks`). Discovery may note structural gaps without naming risk. |
+| Inferring module function from topology position: `"it mediates connectivity"`, `"it orchestrates requests"`, `"it likely validates"`, `"dependency mediation role"`, `"validates bridge semantics"` | State the topological fact without inferring function: `"entrypoint node connects to two boundary nodes via bridge_001 and bridge_002"`. File content is required to determine function — that belongs to Forensics. |
+| System behavior description: `"operational flow"`, `"the system processes"`, `"the system's function"`, `"system's operational flow"` | Investigation strategy: `"evidence collection required at entrypoint node before forensics can interpret dependency direction"`. Discovery describes the investigation, not the system. |
 
 File paths are permitted **only** in:
 - `observed_request_alignment.requested_paths`
@@ -341,16 +343,25 @@ File paths are permitted **only** in:
 Discovery reads runtime-owned topology data.
 Discovery copies runtime-owned topology data verbatim.
 Discovery does not select, prioritize, or route attention — that is runtime-owned.
-Discovery observes and reports what the topology shows qualitatively.
+
+The subject of Discovery output is always the **investigation**, never the system under investigation.
+
+- `operational_observations` tells the investigation what it needs to do next.
+- `operational_observations` does NOT explain what system components do.
+- `rationale` explains why the investigation is focused here — not what the code does.
+- `recommended_next_actions` directs investigation workflow — not system function.
+
+Topology reveals structure. Function is revealed only by file content.
+File content belongs to Forensics.
+Discovery does not read file content. Therefore Discovery cannot speak about function.
 
 Structure, selection, counts, and attention routing are computed by runtime capabilities
 (`structural.builder`, `runtime.attention_seed`).
 Discovery reads and copies them.
 
-Operational interpretation of topology, investigative focus, gaps, prioritization, and next steps belong to Discovery.
+Operational investigation focus, evidence gaps, prioritization, and next steps belong to Discovery.
 Detailed root-cause analysis, defect causality, and structural repair proposal belong to Forensics.
 Correction belongs to Repair.
 Simplification belongs to Optimize.
 Challenge belongs to Adversarial.
 Final verdict belongs to Validation.
-
