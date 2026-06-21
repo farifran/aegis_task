@@ -80,7 +80,10 @@ set -Eeuo pipefail
 
 readonly HANDOVER_FILE=".harness/runtime/epistemic_handover.json"
 
-declare -A PIPELINES
+declare -A PIPELINES=(
+  [readonly]="discovery forensics"
+  [mutation]="discovery forensics repair optimize adversarial validation"
+)
 
 PIPELINE="mutation"
 TARGET=""
@@ -98,17 +101,6 @@ require() {
 
 pipeline_contains_mutation() {
   [[ "${PIPELINE}" == "mutation" ]]
-}
-
-load_pipelines_from_runtime() {
-  local modes_json
-  modes_json="$(bash runtime_aegis.sh modes 2>/dev/null)" || {
-    echo "[RUN][FATAL] failed to retrieve modes registry from runtime" >&2
-    exit 1
-  }
-
-  PIPELINES[readonly]="$(echo "${modes_json}" | jq -r '.readonly | join(" ")')"
-  PIPELINES[mutation]="$(echo "${modes_json}" | jq -r '.mutation | join(" ")')"
 }
 
 check_dependencies() {
@@ -131,18 +123,38 @@ check_dependencies() {
   echo
 }
 
+next_mode() {
+
+  case "$1" in
+    discovery)   echo forensics ;;
+    forensics)   echo repair ;;
+    repair)      echo optimize ;;
+    optimize)    echo adversarial ;;
+    adversarial) echo validation ;;
+    *)           echo "" ;;
+  esac
+
+}
+
 resolve_resume() {
 
-  local status_json
-  status_json="$(bash runtime_aegis.sh status 2>/dev/null)" || {
-    echo "[RUN][FATAL] failed to retrieve pipeline status from runtime" >&2
+  [[ -f "${HANDOVER_FILE}" ]] || {
+    echo "[RUN][FATAL] handover not found"
     exit 1
   }
 
-  local resume_from
-  resume_from="$(echo "${status_json}" | jq -r '.next_mode // empty')"
+  local last_mode
 
-  [[ -n "${resume_from}" && "${resume_from}" != "null" ]] || {
+  last_mode="$(
+    jq -r '.artifact_snapshot.mode // empty' \
+      "${HANDOVER_FILE}"
+  )"
+
+  local resume_from
+
+  resume_from="$(next_mode "${last_mode}")"
+
+  [[ -n "${resume_from}" ]] || {
     echo "[RUN] nothing to resume"
     exit 0
   }
@@ -304,8 +316,6 @@ parse_cli() {
 main() {
 
   parse_cli "$@"
-
-  load_pipelines_from_runtime
 
   check_dependencies
 
