@@ -97,6 +97,9 @@ file in one access:
 - `is_boundary` / `boundary_id` — whether the file is a boundary
 - `in_degree`, `out_degree`, `total_degree` — graph degrees
 - `test_covered` — whether tests cover this file
+- `responsibility` — the mechanically extracted responsibility description for the file
+- `responsibility_signals` — responsibility signals detected
+- `responsibility_confidence` — the confidence level of responsibility classification (e.g. low, medium, high)
 
 Resolved file paths route inspection only. They are not evidence by themselves.
 Evidence for interpretations must still come from runtime-exposed capability payloads.
@@ -106,21 +109,10 @@ Evidence for interpretations must still come from runtime-exposed capability pay
 When the preceding artifact snapshot has `mode: "discovery"`, Forensics may
 also consume these operational context fields produced by Discovery:
 
-- `artifact_snapshot.operational_context.investigation_scope` — the scope of the current investigation
-  (`scope_type`, `scope_targets`, `scope_confidence`). Use this to focus
-  interpretation on the files the runtime identified as relevant.
-- `artifact_snapshot.operational_context.attention_targets` — the subset of hotspots relevant to
-  the investigation scope. These are pre-filtered — Forensics does not need
-  to re-derive which hotspots matter.
 - `artifact_snapshot.operational_context.blocking_conditions` — factual conditions that impede
   investigation (e.g. ambiguous path resolution, missing evidence). If
   blocking conditions are present, Forensics should address them before
   proposing repair candidates.
-- `artifact_snapshot.operational_context.relevant_surfaces` — surfaces containing the attention
-  targets. Use this to scope investigation to the operational subset.
-- `artifact_snapshot.operational_context.critical_relationships` — bridges connecting the
-  relevant surfaces. These are the structural connections that matter for
-  the current investigation.
 
 These fields are operational context, not evidence. They compress the
 topology into the minimal set Forensics needs. Evidence for interpretations
@@ -248,6 +240,8 @@ The JSON payload must remain:
 - interpretive;
 - operationally observable.
 
+Forensics must include `investigation_hypotheses` (list of qualitative hypotheses about the repository structure and potential dependency behaviors) and `investigation_risks` (list of qualitative risks in the current topology/scope) at the top level of the JSON payload.
+
 Forensics must include a minimal `handover_attention` object that narrows the routed attention for the next mode.
 
 Forensics must include `repair_candidates`.
@@ -277,6 +271,12 @@ Repair must not reconstruct missing candidates from prose or implicit context.
   "observations": [],
   "unresolved_questions": [],
   "confidence": "low|medium|high",
+  "investigation_hypotheses": [
+    "Dependency behavior is concentrated in a single controller-model chain."
+  ],
+  "investigation_risks": [
+    "Isolated surfaces might contain hidden entrypoints or dead code."
+  ],
   "repair_candidates": [
     {
       "id": "src/index.ts",

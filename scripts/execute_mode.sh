@@ -345,7 +345,7 @@ resolve_capability_argument() {
 
       printf '%s' "${AEGIS_CAPABILITY_ARGUMENTS[$capability]:-}"
       ;;
-    filesystem.list_tree|filesystem.extract_import_graph|filesystem.extract_reference_graph|filesystem.extract_symbols|filesystem.extract_entrypoints|filesystem.extract_test_relationships|filesystem.extract_configuration_structure|filesystem.extract_references|structural.builder)
+    filesystem.list_tree|filesystem.extract_import_graph|filesystem.extract_reference_graph|filesystem.extract_symbols|filesystem.extract_entrypoints|filesystem.extract_test_relationships|filesystem.extract_configuration_structure|filesystem.extract_references|filesystem.extract_responsibilities|structural.builder)
       printf '%s' "${AEGIS_EVIDENCE_TARGET_PATH:-.}"
       ;;
     *)
@@ -736,6 +736,8 @@ validate_artifact() {
           and (.observations | type == "array")
           and (.unresolved_questions | type == "array")
           and (.confidence == "low" or .confidence == "medium" or .confidence == "high")
+          and (.investigation_hypotheses | type == "array")
+          and (.investigation_risks | type == "array")
           and (
             .repair_candidates
             | type == "array"

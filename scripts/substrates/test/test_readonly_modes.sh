@@ -103,8 +103,6 @@ class Handler(http.server.BaseHTTPRequestHandler):
                     "rationale": [],
                     "escalation_reason": None,
                     "recommended_next_actions": [],
-                    "investigation_hypotheses": [],
-                    "investigation_risks": [],
                     "evidence_priorities": [],
                     "confidence_drivers": []
                 },
@@ -130,6 +128,8 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 "observations": [],
                 "unresolved_questions": [],
                 "confidence": "low",
+                "investigation_hypotheses": [],
+                "investigation_risks": [],
                 "repair_candidates": [],
                 "handover_attention": {
                     "next_attention_targets": [],
@@ -247,12 +247,15 @@ assert_discovery_uses_default_investigation_input() {
 
   set +e
   env -u AEGIS_INVESTIGATION_INPUT \
-    bash runtime_aegis.sh discovery >/dev/null 2>"${runtime_log_file}"
+    bash runtime_aegis.sh discovery >"${runtime_log_file}" 2>&1
   status=$?
   set -e
 
-  [[ "${status}" -eq 0 ]] \
-    || fail "discovery_failed_missing_investigation_input"
+  if [[ "${status}" -ne 0 ]]; then
+    echo "STATUS: ${status}, LOG FILE: ${runtime_log_file}" >&2
+    cat "${runtime_log_file}" >&2
+    fail "discovery_failed_missing_investigation_input"
+  fi
 
   grep -q "^\[AEGIS\]\[RUNTIME\]$" "${runtime_log_file}" \
     || fail "missing_runtime_default_investigation_prefix"

@@ -103,8 +103,6 @@ All fields generated or copied by Discovery are placed under the `operational_co
 | `rationale` | Cognitive | Explains the reasoning behind the investigation priority and why certain attention targets were selected. |
 | `escalation_reason` | Cognitive | Null, or a string explaining why the investigation is blocked or requires escalation. |
 | `recommended_next_actions` | Cognitive | Specific, actionable recommended next steps (e.g. invoke forensics on target X). |
-| `investigation_hypotheses` | Cognitive | List of qualitative hypotheses about the repository structure and potential dependency behaviors. |
-| `investigation_risks` | Cognitive | List of qualitative risks in the current topology/scope (e.g., dead code, hidden entrypoints). |
 | `evidence_priorities` | Cognitive | List of specific capabilities and targets to prioritize for collection. |
 | `confidence_drivers` | Cognitive | List of factors driving structural or operational confidence (e.g., "Bridge observed mechanically"). |
 
@@ -233,12 +231,6 @@ No explanations.
     "recommended_next_actions": [
       "Invoke forensics mode on src/index.ts"
     ],
-    "investigation_hypotheses": [
-      "Dependency behavior is concentrated in a single controller-model chain."
-    ],
-    "investigation_risks": [
-      "Isolated surfaces might contain hidden entrypoints or dead code."
-    ],
     "evidence_priorities": [
       "filesystem.read:src/index.ts"
     ],
@@ -308,8 +300,6 @@ If `structural.builder` payload is unavailable or failed:
 - Set `operational_context.rationale` to `[]`.
 - Set `operational_context.escalation_reason` to `"required evidence payload missing"`.
 - Set `operational_context.recommended_next_actions` to `[]`.
-- Set `operational_context.investigation_hypotheses` to `[]`.
-- Set `operational_context.investigation_risks` to `[]`.
 - Set `operational_context.evidence_priorities` to `[]`.
 - Set `operational_context.confidence_drivers` to `[]`.
 

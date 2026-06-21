@@ -139,7 +139,7 @@ export AEGIS_RUNTIME_REMOVE_CAPABILITY_PAYLOADS
 : "${AEGIS_EVIDENCE_MAX_TOTAL_BYTES:=150000}"
 : "${AEGIS_SEARCH_SYMBOL_MAX_MATCH_LINES:=100}"
 : "${AEGIS_FILE_CONTENT_MAX_BYTES:=50000}"
-: "${AEGIS_EPISTEMIC_HANDOVER_MAX_BYTES:=100000}"
+: "${AEGIS_EPISTEMIC_HANDOVER_MAX_BYTES:=150000}"
 : "${AEGIS_CAPABILITY_MANIFEST_MAX_BYTES:=75000}"
 
 # Per-mode evidence budgets — constitutional guard against prompt explosion.
@@ -181,6 +181,8 @@ declare -ar AEGIS_FILESYSTEM_PRUNE_PATHS=(
   "scripts/substrates/test"
   ".venv"
   ".aider.tags.cache.v4"
+  "tests/benchmark"
+  "tests/golden"
 )
 
 export AEGIS_FILESYSTEM_PRUNE_PATHS
@@ -340,6 +342,7 @@ declare -Ar AEGIS_CAPABILITY_ARGUMENTS=(
 declare -ar AEGIS_DISCOVERY_EVIDENCE=(
   "filesystem.list_tree"
   "filesystem.read:epistemic_handover"
+  "filesystem.extract_responsibilities"
   "structural.builder"
   "runtime.attention_seed"
 )

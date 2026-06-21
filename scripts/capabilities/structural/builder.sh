@@ -115,6 +115,7 @@ required_dependency_capabilities=(
   "filesystem.extract_entrypoints"
   "filesystem.extract_test_relationships"
   "filesystem.extract_configuration_structure"
+  "filesystem.extract_responsibilities"
 )
 
 for cap in "${required_dependency_capabilities[@]}"; do
@@ -164,6 +165,7 @@ symbols_payload,       st_sy = load_payload('filesystem_extract_symbols.json')
 entrypoints_payload,   st_ep = load_payload('filesystem_extract_entrypoints.json')
 test_rel_payload,      st_tr = load_payload('filesystem_extract_test_relationships.json')
 config_struct_payload, st_cs = load_payload('filesystem_extract_configuration_structure.json')
+responsibilities_payload, st_rp = load_payload('filesystem_extract_responsibilities.json')
 
 consumed_payloads = [
     {'file': 'filesystem_extract_import_graph.json',           'status': st_ig},
@@ -172,6 +174,7 @@ consumed_payloads = [
     {'file': 'filesystem_extract_entrypoints.json',            'status': st_ep},
     {'file': 'filesystem_extract_test_relationships.json',     'status': st_tr},
     {'file': 'filesystem_extract_configuration_structure.json','status': st_cs},
+    {'file': 'filesystem_extract_responsibilities.json',       'status': st_rp},
 ]
 
 # =========================================================
@@ -591,6 +594,14 @@ for _ur in unresolved_refs_raw:
 # not analyzed, so their isolation is none_observed.
 _EXTRACTOR_SUPPORTED_EXTS = {'.py', '.ts', '.tsx', '.js', '.jsx', '.sh', '.bash'}
 
+resp_map = {}
+for item in (responsibilities_payload or {}).get('responsibilities', []):
+    resp_map[item['file']] = {
+        'responsibility': item.get('responsibility', 'module'),
+        'responsibility_signals': item.get('signals', []),
+        'responsibility_confidence': item.get('confidence', 'low')
+    }
+
 node_index = {}
 for _n in nodes:
     _surf = surface_of.get(_n)
@@ -620,6 +631,9 @@ for _n in nodes:
         'total_degree':        in_degree.get(_n, 0) + out_degree.get(_n, 0),
         'unresolved_dependency_count': unresolved_dep_count.get(_n, 0),
         'test_covered':        _n in covered_files,
+        'responsibility':      resp_map.get(_n, {}).get('responsibility', 'module'),
+        'responsibility_signals': resp_map.get(_n, {}).get('responsibility_signals', []),
+        'responsibility_confidence': resp_map.get(_n, {}).get('responsibility_confidence', 'low'),
     }
 
 for _e in entrypoints_out:

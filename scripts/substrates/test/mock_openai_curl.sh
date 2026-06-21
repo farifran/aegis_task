@@ -71,8 +71,6 @@ case "${mode}" in
             rationale: [],
             escalation_reason: null,
             recommended_next_actions: [],
-            investigation_hypotheses: [],
-            investigation_risks: [],
             evidence_priorities: [],
             confidence_drivers: []
           },
@@ -102,6 +100,8 @@ case "${mode}" in
           observations: [],
           unresolved_questions: [],
           confidence: "low",
+          investigation_hypotheses: [],
+          investigation_risks: [],
           repair_candidates: [],
           handover_attention: {
             next_attention_targets: [],

@@ -377,11 +377,11 @@ assemble_system_prompt() {
 
   local mode_specific_instructions=""
   if [[ "${AEGIS_MODE}" == "forensics" ]]; then
-    mode_specific_instructions="CRITICAL FORENSICS CONTRACT REQUIREMENT: The array 'handover_attention.next_attention_targets' MUST be exactly identical (both in order and elements) to the list of 'id' values extracted from the 'repair_candidates' array. Do not add any target to next_attention_targets unless it is also listed in repair_candidates, and vice versa. Furthermore, repair candidate 'id's MUST ONLY be files that are part of the active topology (i.e. bridges, boundaries, hotspots, entrypoints, or surface cluster members). Do NOT propose structurally isolated files (with zero relationships/total_degree=0) as repair candidates under any circumstances."
+    mode_specific_instructions="CRITICAL FORENSICS CONTRACT REQUIREMENT: The array 'handover_attention.next_attention_targets' MUST be exactly identical (both in order and elements) to the list of 'id' values extracted from the 'repair_candidates' array. Do not add any target to next_attention_targets unless it is also listed in repair_candidates, and vice versa. Furthermore, repair candidate 'id's MUST ONLY be files that are part of the active topology (i.e. bridges, boundaries, hotspots, entrypoints, or surface cluster members). Do NOT propose structurally isolated files (with zero relationships/total_degree=0) as repair candidates under any circumstances. Populate the following fields at the top level of the forensics artifact:
+- 'investigation_hypotheses': qualitative hypotheses about structural/dependency patterns or failure causes.
+- 'investigation_risks': qualitative risks in the current topology/scope (e.g. untested boundaries, hidden coupling, single points of failure)."
   elif [[ "${AEGIS_MODE}" == "discovery" ]]; then
-    mode_specific_instructions="CRITICAL DISCOVERY CONTEXT CONSTRAINTS: You must stop describing or narrating the topology structure verbatim (never repeat counts, metrics, or raw facts such as node/edge/bridge/boundary counts). Instead, you must exclusively produce operational context: hypotheses, priorities, risks, gaps, next steps, and investigative strategy (what to do with what exists, not what exists). Populate the following fields inside 'operational_context':
-- 'investigation_hypotheses': qualitative hypotheses about structural/dependency patterns.
-- 'investigation_risks': qualitative risks in the current topology/scope (e.g. dead code, hidden entrypoints).
+    mode_specific_instructions="CRITICAL DISCOVERY CONTEXT CONSTRAINTS: You must stop describing or narrating the topology structure verbatim (never repeat counts, metrics, or raw facts such as node/edge/bridge/boundary counts). Instead, you must exclusively produce operational context: priorities, gaps, next steps, and investigative strategy (what to do with what exists, not what exists). Populate the following fields inside 'operational_context':
 - 'evidence_priorities': specific capabilities and targets to prioritize for collection.
 - 'confidence_drivers': factors driving structural/operational confidence (e.g. 'Bridge observed mechanically')."
   fi

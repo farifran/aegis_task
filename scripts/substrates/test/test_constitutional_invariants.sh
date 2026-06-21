@@ -120,8 +120,6 @@ class Handler(http.server.BaseHTTPRequestHandler):
                     "rationale": [],
                     "escalation_reason": None,
                     "recommended_next_actions": [],
-                    "investigation_hypotheses": [],
-                    "investigation_risks": [],
                     "evidence_priorities": [],
                     "confidence_drivers": []
                 },
@@ -144,6 +142,8 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 "observations": [],
                 "unresolved_questions": [],
                 "confidence": "low",
+                "investigation_hypotheses": [],
+                "investigation_risks": [],
                 "repair_candidates": [],
                 "handover_attention": {
                     "next_attention_targets": [],
@@ -478,6 +478,7 @@ assert_payloads_are_execution_scoped() {
       "filesystem_extract_entrypoints.json",
       "filesystem_extract_import_graph.json",
       "filesystem_extract_reference_graph.json",
+      "filesystem_extract_responsibilities.json",
       "filesystem_extract_symbols.json",
       "filesystem_extract_test_relationships.json",
       "filesystem_list_tree.json",
