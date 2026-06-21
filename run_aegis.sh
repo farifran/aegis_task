@@ -282,6 +282,17 @@ show_final_report() {
 
 }
 
+resolve_default_target() {
+
+  [[ -n "${TARGET:-}" ]] && return
+
+  if [[ -d "src" ]]; then
+    TARGET="src"
+  else
+    TARGET="."
+  fi
+}
+
 parse_cli() {
 
   while [[ $# -gt 0 ]]; do
@@ -317,9 +328,7 @@ main() {
 
   parse_cli "$@"
 
-  if [[ -z "${TARGET}" ]]; then
-    TARGET="src"
-  fi
+  resolve_default_target
 
   check_dependencies
 
