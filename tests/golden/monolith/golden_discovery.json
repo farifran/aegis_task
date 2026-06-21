@@ -249,8 +249,6 @@
       "recommended_next_actions": [
         "Invoke forensics mode on input/app/controllers/users_controller.py and input/app/models/user.py to interpret the bridge dependency and assess isolated node implications"
       ],
-      "investigation_hypotheses": [],
-      "investigation_risks": [],
       "evidence_priorities": [],
       "confidence_drivers": []
     }

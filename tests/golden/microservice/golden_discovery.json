@@ -174,8 +174,6 @@
         "Invoke forensics mode on input/gateway/main.go to interpret the entrypoint role and investigate the absence of edges",
         "Collect file contents for all isolated nodes to determine if edges are missing from the model or genuinely absent"
       ],
-      "investigation_hypotheses": [],
-      "investigation_risks": [],
       "evidence_priorities": [],
       "confidence_drivers": []
     }

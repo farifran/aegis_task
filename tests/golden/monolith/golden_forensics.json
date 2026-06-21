@@ -293,7 +293,9 @@
             "filesystem.read:.harness/runtime/epistemic_handover.json"
           ]
         }
-      ]
+      ],
+      "investigation_hypotheses": [],
+      "investigation_risks": []
     }
   },
   "epistemic_state": {

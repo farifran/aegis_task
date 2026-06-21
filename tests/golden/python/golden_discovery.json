@@ -349,8 +349,6 @@
         "Invoke forensics mode on input/src/main.py to interpret bridge dependency semantics",
         "Collect file content for isolated nodes to determine if unresolved dependencies exist"
       ],
-      "investigation_hypotheses": [],
-      "investigation_risks": [],
       "evidence_priorities": [],
       "confidence_drivers": []
     }

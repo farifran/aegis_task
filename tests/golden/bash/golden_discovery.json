@@ -211,8 +211,6 @@
         "Invoke forensics mode on input/bin/deploy.sh",
         "Invoke forensics mode on input/lib/utils.sh"
       ],
-      "investigation_hypotheses": [],
-      "investigation_risks": [],
       "evidence_priorities": [],
       "confidence_drivers": []
     }

@@ -369,7 +369,9 @@
             "filesystem_read_epistemic_handover.json"
           ]
         }
-      ]
+      ],
+      "investigation_hypotheses": [],
+      "investigation_risks": []
     }
   },
   "epistemic_state": {
