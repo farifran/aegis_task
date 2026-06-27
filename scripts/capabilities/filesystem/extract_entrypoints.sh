@@ -96,7 +96,7 @@ prune_paths = os.environ.get('PRUNE_PATHS', '').split()
 all_files = []
 for dirpath, dirnames, filenames in os.walk(root):
     try:
-        rel_dir = os.path.relpath(dirpath, root)
+        rel_dir = os.path.relpath(dirpath, '.')
     except ValueError:
         rel_dir = ''
     if rel_dir == '.':
@@ -130,34 +130,34 @@ package_json_mains = set()
 for f in all_files:
     if os.path.basename(f) != 'package.json':
         continue
-    pj_abs = os.path.join(root, f)
-    pj_dir = os.path.dirname(f)
-    try:
-        with open(pj_abs, 'r', encoding='utf-8') as fh:
-            data = json.load(fh)
-        for field in ['main']:
-            if field in data and isinstance(data[field], str):
-                mp = os.path.normpath(os.path.join(pj_dir, data[field])).replace('\\', '/')
-                package_json_mains.add(mp)
-                for ext2 in ['.js', '.ts']:
-                    package_json_mains.add(mp + ext2)
-        if 'bin' in data:
-            bins = data['bin']
-            if isinstance(bins, str):
-                bp = os.path.normpath(os.path.join(pj_dir, bins)).replace('\\', '/')
-                package_json_mains.add(bp)
-            elif isinstance(bins, dict):
-                for v in bins.values():
-                    if isinstance(v, str):
-                        bp = os.path.normpath(os.path.join(pj_dir, v)).replace('\\', '/')
-                        package_json_mains.add(bp)
-    except Exception:
-        pass
+    pj_abs = f
+    if os.path.isfile(pj_abs):
+        try:
+            with open(pj_abs, 'r', encoding='utf-8') as fh:
+                data = json.load(fh)
+                pj_dir = os.path.dirname(f)
+                for field in ['main']:
+                    if field in data and isinstance(data[field], str):
+                        mp = os.path.normpath(os.path.join(pj_dir, data[field])).replace('\\', '/')
+                        package_json_mains.add(mp)
+                        for ext2 in ['.js', '.ts']:
+                            package_json_mains.add(mp + ext2)
+                bins = data.get('bin', {})
+                if isinstance(bins, str):
+                    bp = os.path.normpath(os.path.join(pj_dir, bins)).replace('\\', '/')
+                    package_json_mains.add(bp)
+                elif isinstance(bins, dict):
+                    for v in bins.values():
+                        if isinstance(v, str):
+                            bp = os.path.normpath(os.path.join(pj_dir, v)).replace('\\', '/')
+                            package_json_mains.add(bp)
+        except Exception:
+            pass
 
 entrypoints = []
 
 for f in all_files:
-    f_abs = os.path.join(root, f)
+    f_abs = f
     if not os.path.isfile(f_abs):
         continue
 

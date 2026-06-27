@@ -267,18 +267,7 @@ resolve_mutation_targets() {
     if [[ "${found}" -eq 0 ]]; then
       seen+=("${t}")
 
-      local resolved_t="${t}"
-      if [[ ! -f "${AEGIS_EXECUTION_SURFACE_PATH}/${resolved_t}" ]]; then
-        if [[ -n "${AEGIS_EVIDENCE_TARGET_PATH:-}" ]] && [[ "${AEGIS_EVIDENCE_TARGET_PATH}" != "." ]]; then
-          local cand="${AEGIS_EVIDENCE_TARGET_PATH}/${t}"
-          cand="$(echo "${cand}" | sed 's|//*|/|g' | sed 's|^\./||')"
-          if [[ -f "${AEGIS_EXECUTION_SURFACE_PATH}/${cand}" ]]; then
-            resolved_t="${cand}"
-          fi
-        fi
-      fi
-
-      unique_targets+=("${resolved_t}")
+      unique_targets+=("${t}")
     fi
   done
 

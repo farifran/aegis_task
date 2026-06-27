@@ -69,7 +69,7 @@ prune_paths = os.environ.get('PRUNE_PATHS', '').split()
 
 all_files = []
 for dirpath, dirnames, filenames in os.walk(root):
-    rel_dir = os.path.relpath(dirpath, root)
+    rel_dir = os.path.relpath(dirpath, '.')
     if rel_dir == '.':
         rel_dir = ''
     i = len(dirnames) - 1
@@ -152,7 +152,7 @@ def detect(f):
     if 'bin' in path_segments:
         signals.append('dir:bin/')
         return 'entrypoint', signals, STRONG
-    f_abs = os.path.join(root, f_norm)
+    f_abs = f_norm
     if os.path.isfile(f_abs):
         try:
             with open(f_abs, 'r', encoding='utf-8', errors='ignore') as fh:
@@ -181,7 +181,7 @@ def detect(f):
     if stem_lower in ('api', 'router', 'routes'):
         signals.append(f'name:{stem_lower}')
         return 'controller', signals, MEDIUM
-    f_abs = os.path.join(root, f_norm)
+    f_abs = f_norm
     if os.path.isfile(f_abs) and ext == '.py':
         try:
             with open(f_abs, 'r', encoding='utf-8', errors='ignore') as fh:
@@ -203,7 +203,7 @@ def detect(f):
     if stem_lower in ('db', 'database', 'schema', 'entity'):
         signals.append(f'name:{stem_lower}')
         return 'model', signals, MEDIUM
-    f_abs = os.path.join(root, f_norm)
+    f_abs = f_norm
     if os.path.isfile(f_abs) and ext == '.py':
         try:
             with open(f_abs, 'r', encoding='utf-8', errors='ignore') as fh:

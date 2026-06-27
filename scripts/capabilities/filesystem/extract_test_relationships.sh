@@ -96,7 +96,7 @@ prune_paths = os.environ.get('PRUNE_PATHS', '').split()
 all_files = []
 for dirpath, dirnames, filenames in os.walk(root):
     try:
-        rel_dir = os.path.relpath(dirpath, root)
+        rel_dir = os.path.relpath(dirpath, '.')
     except ValueError:
         rel_dir = ''
     if rel_dir == '.':
@@ -146,7 +146,7 @@ for cf in code_files:
 test_relationships = []
 
 for tf in test_files:
-    tf_abs = os.path.join(root, tf)
+    tf_abs = tf
     matched_targets = set()
 
     # 1. Name similarity: strip test/spec prefixes and suffixes from stem

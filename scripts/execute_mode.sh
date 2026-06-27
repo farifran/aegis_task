@@ -241,6 +241,31 @@ resolve_evidence_profile() {
   AEGIS_ACTIVE_EVIDENCE_ENTRIES=("${evidence_ref[@]}")
 }
 
+augment_evidence_profile_from_handover() {
+
+  if [[ -f "${AEGIS_EPISTEMIC_HANDOVER_FILE_INPUT:-}" ]]; then
+    local req_ev
+    req_ev="$(
+      jq -r '.artifact_snapshot.operational_context.required_evidence[]? // empty' \
+        "${AEGIS_EPISTEMIC_HANDOVER_FILE_INPUT}" 2>/dev/null || true
+    )"
+    while IFS= read -r entry; do
+      [[ -z "${entry}" ]] && continue
+      local dup="false"
+      local active
+      for active in "${AEGIS_ACTIVE_EVIDENCE_ENTRIES[@]:-}"; do
+        if [[ "${active}" == "${entry}" ]]; then
+          dup="true"
+          break
+        fi
+      done
+      if [[ "${dup}" == "false" ]]; then
+        AEGIS_ACTIVE_EVIDENCE_ENTRIES+=("${entry}")
+      fi
+    done <<< "${req_ev}"
+  fi
+}
+
 resolve_evidence_entry_capability() {
 
   local evidence_entry="$1"
@@ -270,7 +295,7 @@ resolve_evidence_payload_file() {
     payload_key+="_${evidence_alias}"
   fi
 
-  printf '%s.json' "$(printf '%s' "${payload_key}" | tr '.' '_')"
+  printf '%s.json' "$(printf '%s' "${payload_key}" | tr '.' '_' | tr '/' '_')"
 }
 
 # =========================================================
@@ -334,12 +359,14 @@ resolve_capability_argument() {
         declare -p AEGIS_RUNTIME_FILESYSTEM_READ_TARGETS >/dev/null 2>&1 \
           || executor_fatal "missing_runtime_filesystem_read_target_registry"
 
-        local runtime_target="${AEGIS_RUNTIME_FILESYSTEM_READ_TARGETS[$evidence_alias]:-}"
+        # Case A: Runtime-owned internal target
+        if [[ -n "${AEGIS_RUNTIME_FILESYSTEM_READ_TARGETS[$evidence_alias]:-}" ]]; then
+          printf '%s' "${AEGIS_RUNTIME_FILESYSTEM_READ_TARGETS[$evidence_alias]}"
+          return 0
+        fi
 
-        [[ -n "${runtime_target}" ]] \
-          || executor_fatal "unknown_runtime_filesystem_read_target"
-
-        printf '%s' "${runtime_target}"
+        # Case B: Workspace target file - return directly
+        printf '%s' "${evidence_alias}"
         return 0
       fi
 
@@ -983,6 +1010,7 @@ main() {
   resolve_execution_engine
   resolve_capability_envelope
   resolve_evidence_profile
+  augment_evidence_profile_from_handover
   prepare_execution_state
   materialize_capability_environment
   measure "executor_capability_payloads" materialize_capability_payloads

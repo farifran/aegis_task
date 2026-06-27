@@ -95,7 +95,7 @@ prune_paths = os.environ.get('PRUNE_PATHS', '').split()
 all_files = []
 for dirpath, dirnames, filenames in os.walk(root):
     try:
-        rel_dir = os.path.relpath(dirpath, root)
+        rel_dir = os.path.relpath(dirpath, '.')
     except ValueError:
         rel_dir = ''
     if rel_dir == '.':
@@ -129,7 +129,7 @@ edges = []
 unresolved_refs = []
 
 for f in nodes:
-    f_abs = os.path.join(root, f)
+    f_abs = f
     if not os.path.isfile(f_abs):
         continue
     try:
