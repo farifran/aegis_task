@@ -448,9 +448,10 @@ The current workspace reveals the following mismatches between declared topology
 4. `package.json` contains a duplicate script `aegis:sanityy` that is identical to `aegis:sanity` (a typo that should be removed).
 5. The previous version of this summary referenced `scripts/lib/epistemic_handover.sh`, which is not present; handover schema logic lives inline in `runtime_aegis.sh`. (Historical note; no longer a live gap.)
 
-### Resolved gap (previously listed)
+### Resolved gaps (previously listed)
 
-- Mutation modes (`repair`, `optimize`) were previously declared but blocked by `mutation_substrate_not_implemented`. This is **no longer true**: the aider substrate (`scripts/substrates/aider_substrate.sh`), mutation artifact validation (`validate_mutation_artifact`), and the promotion pipeline (`scripts/runtime/promote_validated_candidate.sh`, `apply_candidate_diff.sh`) are now implemented and exercised by `test_aider_substrate.sh`, `test_validation_and_promotion.sh`, and `test_candidate_continuity.sh`.
+- **Mutation modes** (`repair`, `optimize`) were previously declared but blocked by `mutation_substrate_not_implemented`. This is **no longer true**: the aider substrate (`scripts/substrates/aider_substrate.sh`), mutation artifact validation (`validate_mutation_artifact`), and the promotion pipeline (`scripts/runtime/promote_validated_candidate.sh`, `apply_candidate_diff.sh`) are now implemented and exercised by `test_aider_substrate.sh`, `test_validation_and_promotion.sh`, and `test_candidate_continuity.sh`.
+- **Unified Canonical Path Identity**: The runtime pipeline had an inconsistency where different components represented paths differently (e.g., `index.ts` vs `src/index.ts`). This has been unified into a single canonical workspace-relative identity (e.g., `src/index.ts`) across all phases. All filesystem extraction capabilities under `scripts/capabilities/filesystem/` have been audited and corrected to resolve paths relative to the workspace root directly, eliminating double-rooting bugs (`os.path.join(root, ...)`).
 
 The remaining gaps are wiring/registry mistakes in `package.json` (and mirrored in `README.md`), not architectural holes.
 
