@@ -181,6 +181,15 @@ Validation must reject:
 - conversational reasoning;
 - unbounded semantic claims.
 
+### Structured Adversarial Evaluation
+
+Validation must inspect the structured adversarial findings. It MUST resolve the final verdict to `"accepted"` even if adversarial findings exist, UNLESS there is at least one finding where `"blocking"` is true AND `"evidence_backed"` is true.
+
+Any adversarial finding that:
+1. Targets standard language or platform behaviors (e.g., standard ECMAScript NaN operations, division by zero, standard operator rules) without explicit contradictory requirements in the Engineering Plan;
+2. Targets speculative developer expectations or undocumented consumer conventions without explicit evidence in the code, comments, or tests;
+MUST be judged as `"evidence_backed": false` (or ignored) by Validation, and the candidate must be approved.
+
 ---
 
 # Artifact Requirements

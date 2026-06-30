@@ -227,7 +227,15 @@ The required artifact fields are:
     "diff": "diff --git ...",
     "files_changed": ["src/index.ts"]
   },
-  "adversarial_findings": ["description of challenge finding 1", "description of challenge finding 2"],
+  "adversarial_findings": [
+    {
+      "finding": "description of the finding",
+      "classification": "contract_violation|test_failure|regression|constitutional_violation|unsupported_speculation",
+      "evidence_backed": true,
+      "reproducible": true,
+      "blocking": true
+    }
+  ],
   "evidence_refs": ["filesystem.read:epistemic_handover", "filesystem.search_symbol"],
   "handover_attention": {
     "next_attention_targets": [],
@@ -236,6 +244,11 @@ The required artifact fields are:
   }
 }
 ```
+
+### Platform Behavior Constraint
+
+Adversarial mode must NOT challenge standard language or platform behaviors (e.g., standard ECMAScript operations producing NaN or conventional mathematical edge cases like negative bases with fractional exponents) as defects unless the Engineering Plan (Issue) explicitly demands a behavior contradicting the platform standard. 
+Critiques targeting standard language/platform behaviors or speculative developer expectations must be classified as `"unsupported_speculation"`, and have `"evidence_backed": false` and `"blocking": false`. Only verified defects backed by explicit contracts, tests, or issues can be `"blocking": true`.
 
 ---
 

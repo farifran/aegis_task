@@ -815,6 +815,8 @@ validate_artifact() {
               | select(.type == "explicit_request")
               | .file),
             $previous_discovery.epistemic_state.next_attention_targets[]?,
+            ($previous_discovery.artifact_snapshot.operational_context.required_evidence[]?
+              | split(":") | .[1]? // .[0]?),
             ($previous_discovery.artifact_snapshot.structural_context.topology_index.boundaries[]?.file),
             ($previous_discovery.artifact_snapshot.structural_context.topology_index.hotspots[]?.file),
             ($previous_discovery.artifact_snapshot.structural_context.topology_index.entrypoints[]?.file),
@@ -846,7 +848,16 @@ validate_artifact() {
             and (.files_changed | type == "array" and length > 0)
             and all(.files_changed[]; type == "string" and length > 0)
           )
-          and (.adversarial_findings | type == "array")
+          and (
+            .adversarial_findings | type == "array" and all(.[];
+              type == "object"
+              and (.finding | type == "string" and length > 0)
+              and (.classification | . == "contract_violation" or . == "test_failure" or . == "regression" or . == "constitutional_violation" or . == "unsupported_speculation")
+              and (.evidence_backed | type == "boolean")
+              and (.reproducible | type == "boolean")
+              and (.blocking | type == "boolean")
+            )
+          )
           and (.evidence_refs | type == "array")
           and (
             .handover_attention

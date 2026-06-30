@@ -83,22 +83,84 @@ show_final_report() {
 # Outputs the task text, or empty string if none remain.
 resolve_next_task() {
   local plan="$1"
-  grep -m 1 '^[[:space:]]*- \[ \]' "${plan}" \
-    | sed -E 's/^[[:space:]]*- \[ \] //'
-}
-
-# Mark the first unchecked task as completed.
-check_next_task() {
-  local plan="$1"
-  # Portable: replace first occurrence of '- [ ]' with '- [x]'
   python3 -c '
 import sys
 plan = sys.argv[1]
 with open(plan, "r") as f:
-    content = f.read()
-new_content = content.replace("- [ ]", "- [x]", 1)
+    lines = f.readlines()
+
+first_pending_idx = -1
+for i, line in enumerate(lines):
+    if "- [ ]" in line:
+        first_pending_idx = i
+        break
+
+if first_pending_idx == -1:
+    sys.exit(0)
+
+header_idx = 0
+for i in range(first_pending_idx, -1, -1):
+    if lines[i].strip().startswith("#"):
+        header_idx = i
+        break
+
+next_header_idx = len(lines)
+header_line = lines[header_idx].strip()
+header_level = len(header_line) - len(header_line.lstrip("#"))
+
+for i in range(first_pending_idx + 1, len(lines)):
+    line_stripped = lines[i].strip()
+    if line_stripped.startswith("#"):
+        current_level = len(line_stripped) - len(line_stripped.lstrip("#"))
+        if current_level <= header_level:
+            next_header_idx = i
+            break
+
+sys.stdout.write("".join(lines[header_idx:next_header_idx]))
+' "${plan}"
+}
+
+check_next_task() {
+  local plan="$1"
+  python3 -c '
+import sys
+plan = sys.argv[1]
+with open(plan, "r") as f:
+    lines = f.readlines()
+
+first_pending_idx = -1
+for i, line in enumerate(lines):
+    if "- [ ]" in line:
+        first_pending_idx = i
+        break
+
+if first_pending_idx == -1:
+    sys.exit(0)
+
+header_idx = 0
+for i in range(first_pending_idx, -1, -1):
+    if lines[i].strip().startswith("#"):
+        header_idx = i
+        break
+
+next_header_idx = len(lines)
+header_line = lines[header_idx].strip()
+header_level = len(header_line) - len(header_line.lstrip("#"))
+
+for i in range(first_pending_idx + 1, len(lines)):
+    line_stripped = lines[i].strip()
+    if line_stripped.startswith("#"):
+        current_level = len(line_stripped) - len(line_stripped.lstrip("#"))
+        if current_level <= header_level:
+            next_header_idx = i
+            break
+
+for i in range(header_idx, next_header_idx):
+    if "- [ ]" in lines[i]:
+        lines[i] = lines[i].replace("- [ ]", "- [x]")
+
 with open(plan, "w") as f:
-    f.write(new_content)
+    f.writelines(lines)
 ' "${plan}"
 }
 
@@ -297,36 +359,60 @@ _promote_workspace() {
     fi
   fi
 
-  local commit_sha
-  commit_sha="$(
-    cd "${ISSUE_WORKSPACE_PATH}" &&
-    git add -A &&
-    git diff --cached --quiet && {
-      echo "[BOOTSTRAP] No changes to commit." >&2
-      echo ""
-    } || {
-      git commit -m "${commit_msg}" --quiet &&
-      git rev-parse HEAD
-    }
-  )" || {
-    echo "[BOOTSTRAP][WARN] Workspace commit failed. No changes promoted."
-    return 0
-  }
-
-  if [[ -z "${commit_sha}" ]]; then
-    echo "[BOOTSTRAP] Nothing to promote."
-    return 0
+  local result_file=".harness/runtime/validated_result.json"
+  local diff_path=""
+  if [[ -f "${result_file}" ]]; then
+    diff_path="$(jq -r '.candidate_diff_path // empty' "${result_file}" 2>/dev/null || echo "")"
   fi
 
-  echo "[BOOTSTRAP] Promoting commit ${commit_sha} to main repository..."
+  if [[ -n "${diff_path}" && -f "${diff_path}" ]]; then
+    echo "[BOOTSTRAP] Applying sovereign validated patch from '${diff_path}'..."
+    git apply "${diff_path}" || {
+      echo "[BOOTSTRAP][WARN] Failed to apply sovereign patch. Falling back to legacy workspace promotion." >&2
+      diff_path=""
+    }
+  fi
 
-  git cherry-pick "${commit_sha}" || {
-    echo "[BOOTSTRAP][WARN] cherry-pick failed. Resolve conflicts manually."
-    git cherry-pick --abort 2>/dev/null || true
-    return 0
-  }
+  if [[ -n "${diff_path}" ]]; then
+    git add -A
+    git diff --cached --quiet && {
+      echo "[BOOTSTRAP] No changes to commit."
+    } || {
+      git commit -m "${commit_msg}" --quiet
+      echo "[BOOTSTRAP] Promotion complete via sovereign patch."
+    }
+  else
+    local commit_sha
+    commit_sha="$(
+      cd "${ISSUE_WORKSPACE_PATH}" &&
+      git add -A &&
+      git diff --cached --quiet && {
+        echo "[BOOTSTRAP] No changes to commit." >&2
+        echo ""
+      } || {
+        git commit -m "${commit_msg}" --quiet &&
+        git rev-parse HEAD
+      }
+    )" || {
+      echo "[BOOTSTRAP][WARN] Workspace commit failed. No changes promoted."
+      return 0
+    }
 
-  echo "[BOOTSTRAP] Promotion complete."
+    if [[ -z "${commit_sha}" ]]; then
+      echo "[BOOTSTRAP] Nothing to promote."
+      return 0
+    fi
+
+    echo "[BOOTSTRAP] Promoting commit ${commit_sha} to main repository..."
+
+    git cherry-pick "${commit_sha}" || {
+      echo "[BOOTSTRAP][WARN] cherry-pick failed. Resolve conflicts manually."
+      git cherry-pick --abort 2>/dev/null || true
+      return 0
+    }
+
+    echo "[BOOTSTRAP] Promotion complete."
+  fi
 }
 
 # =========================================================

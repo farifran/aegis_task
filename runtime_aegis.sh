@@ -1067,7 +1067,11 @@ main() {
           fi
         elif [[ "${mode}" == "optimize" || "${mode}" == "adversarial" || "${mode}" == "validation" ]]; then
           local has_diff
-          has_diff="$(jq -e '.artifact_snapshot.operational_context.diff | type == "string" and length > 0 and . != "(no changes)"' "${AEGIS_EPISTEMIC_HANDOVER_FILE}" 2>/dev/null || echo "false")"
+          has_diff="$(jq -e '(
+            .artifact_snapshot.operational_context?.diff //
+            .artifact_snapshot.candidate_result?.diff //
+            .artifact_snapshot.validated_candidate?.diff
+          ) | type == "string" and length > 0 and . != "(no changes)"' "${AEGIS_EPISTEMIC_HANDOVER_FILE}" 2>/dev/null || echo "false")"
           if [[ "${has_diff}" != "true" ]]; then
             runtime_log "No changes/diff to process. Pipeline execution completed early."
             break

@@ -245,6 +245,7 @@ If a lower layer conflicts with this constitution, this constitution wins.
 - No epistemic handover masquerading as truth.
 - Discovery must never repeat metrics, counts, or structural facts (e.g. node counts, edge counts, bridge counts) already present in the structural_context.
 - Discovery must stop describing/narrating the topology structure and exclusively produce: attention priorities, gaps, recommended next actions, and investigative strategy (what to do with what exists, rather than what exists). Qualitative interpretation (hypotheses and risks) belongs exclusively to Forensics.
+- Adversarial must not challenge standard language or platform behaviors (e.g., standard ECMAScript operations producing NaN or conventional mathematical edge cases) as defects unless the Engineering Plan (Issue) explicitly demands a behavior contradicting the platform standard. Adversarial challenges must be strictly structured, reproducible, and evidence-backed to differentiate speculative critique from verified defects.
 
 ---
 
