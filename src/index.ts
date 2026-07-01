@@ -13,3 +13,6 @@ export function quadratica(a: number, b: number, c: number, x: number): number {
 export function logaritmica(a: number, b: number): number {
     return Math.log(a) / Math.log(b);
 }
+export function potencia(base: number, expoente: number): number {
+    return base ** expoente;
+}
